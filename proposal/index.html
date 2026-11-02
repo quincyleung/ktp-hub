@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTP Hub — Project Proposal</title>
+<meta name="description" content="One app for our Kappa Theta Pi chapter's announcements, events, and requirement points.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #234c8b;
+    --navy-deep: #1a3a6b;
+    --sky: #8bb9ff;
+    --blue: #458eff;
+    --ink: #171717;
+    --muted: #525252;
+    --bg: #ffffff;
+    --surface: #f5f7fb;
+    --line: #e2e6ee;
+    --link: #234c8b;
+    --serif: Palatino, "Palatino Linotype", "Book Antiqua", "URW Palladio L", serif;
+    --sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef1f6;
+      --muted: #a8b0bf;
+      --bg: #0d1424;
+      --surface: #151f35;
+      --line: #263452;
+      --link: #8bb9ff;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.6 var(--sans);
+  }
+  a { color: var(--link); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+
+  /* Hero */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 56px 0 48px;
+  }
+  .eyebrow {
+    font-size: 14px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #d6e5ff;
+    margin: 0 0 20px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(40px, 7vw, 60px);
+    line-height: 1.1;
+    margin: 4px 0 24px;
+  }
+  .oneliner {
+    font-size: clamp(19px, 2.6vw, 23px);
+    line-height: 1.45;
+    max-width: 760px;
+    margin: 0 0 16px;
+  }
+  .pitch { color: #d6e5ff; max-width: 720px; margin: 0; }
+
+  /* Sections */
+  section { padding: 48px 0 8px; }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+  }
+  .kicker {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin: 0 0 4px;
+  }
+  @media (prefers-color-scheme: dark) { .kicker { color: var(--sky); } }
+  h3 { font-size: 18px; margin: 0 0 6px; }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .lede { color: var(--muted); margin-bottom: 20px; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--navy);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .stat b {
+    display: block;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1.1;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  @media (prefers-color-scheme: dark) { .stat b { color: var(--sky); } .stat { border-top-color: var(--sky); } }
+  .stat span { font-size: 15px; color: var(--muted); line-height: 1.4; display: block; }
+
+  /* Cards */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card ul { margin-bottom: 0; }
+
+  /* Focus badge */
+  .focus {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--navy);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  @media (prefers-color-scheme: dark) { .focus { border-left-color: var(--sky); } }
+  .focus .tag {
+    flex: none;
+    background: var(--navy);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  /* Journey */
+  ol.journey { list-style: none; padding: 0; margin: 20px 0 0; counter-reset: step; }
+  ol.journey li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 18px 52px;
+    margin: 0;
+  }
+  ol.journey li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  ol.journey li::after {
+    content: "";
+    position: absolute;
+    left: 16px; top: 38px; bottom: 2px;
+    width: 2px;
+    background: var(--line);
+  }
+  ol.journey li:last-child::after { display: none; }
+  .who { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+  /* Roadmap */
+  .road { margin-top: 20px; border-top: 1px solid var(--line); }
+  .phase {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .phase .when b { display: block; font-size: 18px; }
+  .phase .when span:not(.pill) { color: var(--muted); font-size: 15px; }
+  .pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-bottom: 6px;
+    background: var(--navy);
+    color: #fff;
+  }
+  .pill.soft { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .phase ul { margin: 0; }
+
+  /* Stack table */
+  .table-wrap { overflow-x: auto; margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); }
+  th { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  code { font-size: .92em; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  main { padding-bottom: 64px; }
+
+  @media (max-width: 720px) {
+    header { padding: 40px 0 36px; }
+    .stats { grid-template-columns: 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .phase { grid-template-columns: 1fr; gap: 8px; }
+    .focus { flex-direction: column; gap: 10px; }
+    td:first-child { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Design, Build, Ship Project Proposal · Quincy Leung</p>
+    <h1>KTP Hub</h1>
+    <p class="oneliner">KTP actives who are only somewhat involved miss events and don’t know where they stand, because announcements are scattered across email, Messenger and Slack, and points live in a Google Sheet no one checks.</p>
+    <p class="pitch">One app for our chapter's announcements, events, and requirement points, with phone notifications and attendance that updates points automatically.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <p class="kicker">The problem</p>
+    <h2>Fragmented and outdated</h2>
+    <div class="stats">
+      <div class="stat"><b>3</b><span>channels for announcements: email, Messenger, and Slack, which few people have on their phones</span></div>
+      <div class="stat"><b>Week 6</b><span>and the points tracker is still blank, so nobody knows their standing</span></div>
+      <div class="stat"><b>By hand</b><span>the board copies each sign-in sheet (chapter, fundraisers, socials) into the tracker</span></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Users</p>
+    <h2>Who it's for, and what they told me</h2>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h3>Actives who are somewhat involved</h3>
+        <p>The members who show up sometimes but not to everything. They don't make the effort to look for communication and need it to be accessible.</p>
+        <h3>The e-board</h3>
+        <p style="margin:0">Posts announcements, takes attendance, and keeps the points tracker. Needs to see what each brother is doing without copying between sheets.</p>
+      </div>
+      <div class="card">
+        <h3>What they told me</h3>
+        <ul>
+          <li>They saw announcements over email, or heard about events from other brothers and realized they missed it.</li>
+          <li>They skip chapter when they're too busy; seniors often don't care or would rather do something else.</li>
+          <li>They don't know their standing.</li>
+          <li>When they went to something, it was because other brothers were going.</li>
+          <li>To find information, they go on what they know or ask people.</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:16px">Greek-life apps like OurHouse, Greek Chapter, and CliqWave already bundle announcements, events, and points, yet KTP chapters at Boston, Michigan, and Georgia each built their own. Every chapter's rules are different, and ours aren't served by a generic tool.</p>
+  </section>
+
+  <section>
+    <p class="kicker">Focus</p>
+    <h2>Holistic Journey</h2>
+    <div class="focus" style="margin-top:16px">
+      <span class="tag">Holistic Journey</span>
+      <p style="margin:0">The value of having an app is the whole flow. Going deep on one piece wouldn't fix the problem.</p>
+    </div>
+
+    <h3 style="margin-top:28px">The journey: the Nov 15 chapter meeting</h3>
+    <ol class="journey">
+      <li><span class="who">Board · once</span><br>Imports the roster. Brothers sign up with a roster email, add the app to their home screen, and allow notifications.</li>
+      <li><span class="who">Board</span><br>Creates the chapter meeting.</li>
+      <li><span class="who">Brother</span><br>Gets a push notification and sees the meeting on the homepage and calendar.</li>
+      <li><span class="who">Board · at the meeting</span><br>Opens the roster in the app and taps who's there.</li>
+      <li><span class="who">Brother</span><br>Sees their points update right away on the Points tab.</li>
+    </ol>
+  </section>
+
+  <section>
+    <p class="kicker">Roadmap</p>
+    <h2>From now to the fair</h2>
+    <p class="lede">Build a thin version of the whole loop first, then widen it. The last chapter meeting of the quarter, Sun Nov 15, is the real test.</p>
+    <div class="road">
+      <div class="phase">
+        <div class="when"><span class="pill soft">Prep</span><b>Before Nov 10</b><span>alongside Assignment 6</span></div>
+        <ul>
+          <li>Board agrees to post announcements in the app and take Nov 15 attendance in it</li>
+          <li>Export the roster: name, email, year, status</li>
+          <li>Write down the current point rules and caps</li>
+          <li>Set up Vercel, Supabase, and Clerk on free tiers with usage alerts</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="when"><span class="pill">v1</span><b>Nov 10–17</b><span>due Nov 17</span></div>
+        <ul>
+          <li><strong>First:</strong> home-screen install and push notifications working on iPhone</li>
+          <li>Sign-up limited to roster emails</li>
+          <li>Board posts events and announcements → push to everyone → homepage</li>
+          <li>Attendance: tap who's there on the event roster</li>
+          <li>Points under current rules, filled in from attendance; dues and committee as board toggles</li>
+          <li><strong>Sun Nov 15:</strong> last chapter meeting; take attendance in the app, with the sheet as backup</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="when"><span class="pill soft">Pilot</span><b>Nov 17–24</b><span>board + ~10 trusted friends</span></div>
+        <ul>
+          <li>Pilot group uses it day to day; fix what they run into</li>
+          <li>Directory of active members</li>
+          <li>Calendar view with "Add to Google Calendar"</li>
+          <li>Partiful link on events (RSVPs stay on Partiful)</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="when"><span class="pill">v2</span><b>Nov 24–Dec 1</b><span>Thanksgiving break · fair on Dec 1</span></div>
+        <ul>
+          <li>Build on pilot feedback, no new testers over the break</li>
+          <li>Stretch features: QR self check-in, email backup for anyone without push, or a leaderboard if the board approves new point rules</li>
+          <li>Fair demo with real numbers from the pilot: installs, push opens, Nov 15 attendance</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">How it's built</p>
+    <h2>Tech stack</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Piece</th><th>Choice</th><th>Why it fits</th></tr></thead>
+        <tbody>
+          <tr><td>App</td><td>Next.js on Vercel</td><td>Pages and the API route that sends notifications live in one codebase, deployed where this page is.</td></tr>
+          <tr><td>Styling</td><td>Tailwind CSS</td><td>Fast to build mobile-first screens, since brothers will mostly use this on their phones.</td></tr>
+          <tr><td>Phone install + push</td><td>Installable web app + Web Push (<code>web-push</code>)</td><td>Push works on iPhone once the app is on the home screen, without the $99/year Apple account a native app needs.</td></tr>
+          <tr><td>Data</td><td>Supabase Postgres</td><td>Members, events, and attendance in one place, connected to Clerk sign-ins. Points are calculated from attendance, so they're never out of date.</td></tr>
+          <tr><td>Sign-in</td><td>Clerk (email code)</td><td>Ready-made sign-in screens. Codes work inside the home-screen app, where a sign-in link would open in Safari instead. Only emails on the roster get in, and board vs. member roles come from the roster.</td></tr>
+          <tr><td>Events</td><td>Partiful link + "Add to Google Calendar"</td><td>Partiful has no public API, so RSVPs stay where people already use them. No calendar API needed.</td></tr>
+          <tr><td>Roster</td><td>One-time import from our Google Sheet</td><td>The board's existing list becomes the starting data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" style="margin-top:24px">
+      <div class="card">
+        <h3>MCP servers</h3>
+        <ul>
+          <li><strong>Supabase:</strong> create tables, run migrations, and check data from Claude Code</li>
+          <li><strong>Google Drive:</strong> read the roster and attendance sheets to build the import</li>
+          <li><strong>Claude in Chrome:</strong> click through the journey on the live site</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>CLIs</h3>
+        <ul>
+          <li><strong>Vercel:</strong> deploys and environment variables (like push keys)</li>
+          <li><strong>Supabase:</strong> database migrations kept in git</li>
+          <li><strong>GitHub (<code>gh</code>):</strong> repo and pull requests</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:16px">Everything runs on free tiers: Vercel Hobby, Supabase Free, Clerk Free, and Web Push. About 80 members is well under the limits. Supabase pauses free projects after a week without activity, so I'll keep it in use over Thanksgiving.</p>
+  </section>
+
+</main>
+
+</body>
+</html>
