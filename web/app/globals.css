@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* Same palette as the proposal page. */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #525252;
+  --surface: #f5f7fb;
+  --line: #e2e6ee;
+  --accent: #234c8b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1424;
+    --foreground: #eef1f6;
+    --muted: #a8b0bf;
+    --surface: #151f35;
+    --line: #263452;
+    --accent: #8bb9ff;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-navy: #234c8b;
+  --font-sans: var(--font-source-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: Palatino, "Palatino Linotype", "Book Antiqua", serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}

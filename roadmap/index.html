@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTP Hub — v1 Roadmap</title>
+<meta name="description" content="Day-by-day checklist for KTP Hub v1: sign in, add to home screen, turn on notifications, and get a push when the board posts an event or announcement.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #234c8b;
+    --sky: #8bb9ff;
+    --ink: #171717;
+    --muted: #525252;
+    --bg: #ffffff;
+    --surface: #f5f7fb;
+    --line: #e2e6ee;
+    --accent: #234c8b;
+    --done: #9097a3;
+    --warn: #a15c00;
+    --serif: Palatino, "Palatino Linotype", "Book Antiqua", "URW Palladio L", serif;
+    --sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef1f6;
+      --muted: #a8b0bf;
+      --bg: #0d1424;
+      --surface: #151f35;
+      --line: #263452;
+      --accent: #8bb9ff;
+      --done: #66708a;
+      --warn: #f0b35a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 var(--sans);
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header */
+  header { background: var(--navy); color: #fff; padding: 36px 0 32px; }
+  .top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 18px; }
+  .eyebrow { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: #d6e5ff; margin: 0; }
+  header a { color: #d6e5ff; font-size: 15px; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 6vw, 52px);
+    line-height: 1.1;
+    margin: 0 0 14px;
+  }
+  .task { font-size: clamp(18px, 2.4vw, 20px); line-height: 1.45; margin: 0 0 26px; max-width: 680px; }
+  .task b { color: #d6e5ff; font-weight: 600; }
+  .meter-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px 16px;
+    flex-wrap: wrap;
+    font-size: 15px;
+    color: #d6e5ff;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .meter-row strong { color: #fff; }
+  .bar { height: 10px; background: rgba(255, 255, 255, .18); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--sky); border-radius: inherit; transition: width .3s ease; }
+
+  main { padding-bottom: 56px; }
+
+  /* Decisions */
+  .decisions { padding: 32px 0 28px; }
+  .kicker {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  dl {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px 18px;
+  }
+  dl div { display: grid; grid-template-columns: 128px 1fr; gap: 14px; padding: 12px 0; }
+  dl div + div { border-top: 1px solid var(--line); }
+  dt { font-weight: 700; font-size: 15px; padding-top: 1px; }
+  dd { margin: 0; }
+
+  /* Days */
+  .day { padding: 28px 0 10px; border-top: 1px solid var(--line); }
+  .day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .date { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .now {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    letter-spacing: .06em;
+    border-radius: 4px;
+    padding: 1px 7px;
+    background: var(--navy);
+    color: #fff;
+    vertical-align: 1px;
+  }
+  @media (prefers-color-scheme: dark) { .now { background: var(--sky); color: #0d1424; } }
+  .day h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+    margin: 4px 0 4px;
+  }
+  .meta { color: var(--muted); font-size: 15px; margin: 0 0 8px; }
+  .count { font-size: 15px; font-weight: 700; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .count.complete { color: var(--accent); }
+  .count.behind { color: var(--warn); }
+
+  ul.checks { list-style: none; margin: 0; padding: 0; }
+  ul.checks label {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 9px 0;
+    cursor: pointer;
+  }
+  ul.checks input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 3px 0 0;
+    accent-color: var(--navy);
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { ul.checks input { accent-color: var(--sky); } }
+  ul.checks small { display: block; color: var(--muted); font-size: 15px; line-height: 1.45; margin-top: 2px; }
+  ul.checks input:checked + span,
+  ul.checks input:checked + span small { color: var(--done); text-decoration: line-through; }
+  .gate {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 0 6px;
+    margin-right: 4px;
+    vertical-align: 1px;
+    text-decoration: none;
+  }
+  code { font-size: .92em; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  /* Later */
+  details.later { border-top: 1px solid var(--line); padding-top: 24px; margin-top: 18px; }
+  details.later > summary {
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1.2;
+    list-style-position: outside;
+  }
+  details.later > p { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+  details.later .day { border-top: 0; padding-top: 20px; }
+  details.later .day h2 { font-size: 22px; }
+
+  footer { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 16px; color: var(--muted); font-size: 15px; }
+  footer button {
+    font: inherit;
+    font-size: 14px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-left: 6px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    dl div { grid-template-columns: 1fr; gap: 2px; }
+    .day h2 { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <p class="eyebrow">Design, Build, Ship · Project v1</p>
+      <a href="../proposal/">← Proposal</a>
+    </div>
+    <h1>KTP Hub v1 Roadmap</h1>
+    <p class="task"><b>Core task:</b> A brother signs in, adds KTP Hub to their home screen, turns on notifications, and gets a push when the board posts an event or announcement. The post then shows on the homepage.</p>
+    <div class="meter-row">
+      <span id="done"><strong>0</strong> of 0 v1 steps done</span>
+      <span id="due">Due Tue Nov 17, 5:30 PM</span>
+    </div>
+    <div class="bar" role="progressbar" aria-label="v1 progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="fill"></i></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="decisions">
+    <p class="kicker">What we decided · Nov 13–14</p>
+    <dl>
+      <div><dt>Core task</dt><dd>“Don't miss an event.” It's the riskiest technology, so it goes first, and it goes after the main complaint.</dd></div>
+      <div><dt>Announcements</dt><dd>Added Nov 14. They share the events' post-and-push path: an announcement is a post with a message instead of a time and place. The board decides per post whether to send a push (“Notify everyone,” on by default).</dd></div>
+      <div><dt>First push</dt><dd>A welcome push the moment someone taps Allow, so a new person finishes the task alone without waiting for the board.</dd></div>
+      <div><dt>iPhone install</dt><dd>If the app is opened in Safari instead of from the home screen, it shows the Share → Add to Home Screen steps.</dd></div>
+      <div><dt>Non-members</dt><dd>Guest mode: any email can sign in. Non-roster emails land in a demo chapter with sample events.</dd></div>
+      <div><dt>Sun Nov 15</dt><dd>Real-user test after the chapter meeting. Attendance stays on the sheet.</dd></div>
+      <div><dt>Not in v1</dt><dd>Points and attendance, calendar, directory, Partiful links, QR check-in, leaderboard, email backup.</dd></div>
+    </dl>
+  </section>
+
+  <section class="day" data-group data-v1 data-date="2026-11-14">
+    <div class="day-head">
+      <span class="date">Sat Nov 14 · Part 1</span>
+      <span class="count"></span>
+    </div>
+    <h2>Set up, then prove push works</h2>
+    <p class="meta">About 3 hours, moved from Friday. Do the push test before building anything else.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="fri-cli"><span>Install the Vercel, Supabase, and GitHub (<code>gh</code>) CLIs<small>Vercel is installed. <code>gh</code> and <code>supabase</code> need updated Command Line Tools; <code>npx supabase</code> works in the meantime.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-app"><span>Create the Next.js + Tailwind app in this repo and push it to GitHub<small>The app lives in <code>web/</code> with its own Vercel project, so the proposal link stays as it is.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-deploy"><span>Deploy to Vercel so there's a live link from day one</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-accounts"><span>Create the Supabase project and Clerk app on free tiers<small>Set usage alerts or limits wherever they're offered.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-deny"><span>Add a deny rule so agents can't read <code>.env</code><small><code>.gitignore</code> already covers <code>.env*</code>.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-pwa"><span>Add the web app manifest, app icon, and service worker</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-vapid"><span>Generate VAPID push keys and put them in Vercel environment variables, not the repo</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-sub"><span>An “Enable notifications” button saves a subscription, and the server sends a test push with <code>web-push</code></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-iphone"><span><b class="gate">Go/no-go</b> Add the live link to your iPhone home screen and receive one test push</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-android"><span>Check push on Android Chrome or a desktop browser too<small>No install is needed there.</small></span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v1 data-date="2026-11-14">
+    <div class="day-head">
+      <span class="date">Sat Nov 14 · Part 2</span>
+      <span class="count"></span>
+    </div>
+    <h2>Build the core task, one slice at a time</h2>
+    <p class="meta">About 4.5 hours. Everything has to work on your own iPhone by tonight.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="sat-signin"><span>Slice 1, sign in: the Clerk email code works inside the home-screen app</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-roster"><span>Import the roster (name, email, year, status, board role) into Supabase<small>Keep member data out of git.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="sat-guest"><span>Roster emails join the chapter, and any other email becomes a guest in a demo chapter with sample events</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-guide"><span>Slice 2, install guide: if the app is opened in Safari instead of from the home screen, show the Share → Add to Home Screen steps</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-enable"><span>Slice 3, turn on: tap Enable, then Allow. The subscription is saved for that user, and a welcome push arrives.</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-post"><span>Slice 4, the board posts an event (title, time, place) or an announcement (title, message). It appears on the homepage and, if “Notify everyone” is checked, is pushed to every member.<small>One form with an Event / Announcement switch, so both use the same push code. “Notify everyone” is on by default; the board unchecks it for small updates.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="sat-demo"><span>Guests get a “Send me a sample event” button that runs the same post-and-push path, only to them</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-home"><span>Slice 5, homepage: upcoming events (soonest first) and announcements (newest first)<small>It works even for someone who never turned on push.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="sat-rls"><span>Row-level security on every table, so guests never see real chapter events</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-agent"><span>Ask the agent: “Open my project in the browser as a new person, and do the core task. Tell me each place you got stuck.” Then fix those places.</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-gate"><span><b class="gate">Go/no-go</b> Delete the app, reinstall it from the live link, and do the whole task on your iPhone</span></label></li>
+      <li><label><input type="checkbox" data-id="sat-line-up"><span>Line up about 5 brothers for after the meeting, and bring a sheet for notes<small>Mix iPhone and Android, and include a few of the somewhat-involved actives.</small></span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v1 data-date="2026-11-15">
+    <div class="day-head">
+      <span class="date">Sun Nov 15</span>
+      <span class="count"></span>
+    </div>
+    <h2>Chapter meeting: test with real users</h2>
+    <p class="meta">About 1 hour, after the meeting. Watch, don't help.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="sun-sheet"><span>Take attendance on the sheet as usual</span></label></li>
+      <li><label><input type="checkbox" data-id="sun-task"><span>Give each tester one task: “Get KTP Hub on your phone and turn on notifications.” Watch without helping.</span></label></li>
+      <li><label><input type="checkbox" data-id="sun-notes"><span>Write down what each person did and said<small>Note especially where they stopped, guessed, or asked for help.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="sun-push"><span>Post a test event from the board account, and note whose phone actually got the push</span></label></li>
+      <li><label><input type="checkbox" data-id="sun-numbers"><span>Record the counts: tried it, installed it, turned on push, received the push</span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v1 data-date="2026-11-16">
+    <div class="day-head">
+      <span class="date">Mon Nov 16</span>
+      <span class="count"></span>
+    </div>
+    <h2>Fix what testers ran into</h2>
+    <p class="meta">About 1.5 hours.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="mon-fix"><span>Fix the top 2–3 places people got stuck on Sunday</span></label></li>
+      <li><label><input type="checkbox" data-id="mon-guest"><span>Have a classmate try guest mode cold, with no instructions, and note where they get stuck</span></label></li>
+      <li><label><input type="checkbox" data-id="mon-retest"><span>Redo the full task on your iPhone after the fixes</span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v1 data-date="2026-11-17">
+    <div class="day-head">
+      <span class="date">Tue Nov 17</span>
+      <span class="count"></span>
+    </div>
+    <h2>Ship by 5:30 PM</h2>
+    <p class="meta">About 1.5 hours. Finish the security checks first, then write and submit.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="tue-keys"><span>Keys are only in environment variables, with none in the repo or its git history</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-deny"><span>The deny rule for <code>.env</code> is in place</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-rls"><span>Row-level security is on in Supabase for every table</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-sec"><span>Run <code>/security-review</code> and fix what comes up</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-free"><span>Everything is still on free tiers, with usage alerts set</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-v2"><span>Write the v2 plan from your test notes: what to fix first, what to add, what waits, and why</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-submit"><span>Submit in Google Classroom: the prototype URL, the GitHub link, and the v2 plan</span></label></li>
+      <li><label><input type="checkbox" data-id="tue-class"><span>Bring v1 and the plan to class</span></label></li>
+    </ul>
+  </section>
+
+  <details class="later">
+    <summary>After v1: pilot and v2</summary>
+    <p>Carried over from the proposal, with points moved here. Your v2 plan, written from the tests, decides the real order.</p>
+
+    <section class="day" data-group data-date="2026-11-18" data-end="2026-11-24">
+      <div class="day-head">
+        <span class="date">Pilot · Nov 18–24</span>
+        <span class="count"></span>
+      </div>
+      <h2>Board + about 10 friends use it day to day</h2>
+      <ul class="checks">
+        <li><label><input type="checkbox" data-id="pil-use"><span>The pilot group uses it day to day, and you fix what they run into</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-attend"><span>Points from attendance: the board taps who's there on an event, and points update</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-import"><span>Import this quarter's attendance so everyone's standing is right, not just from Nov 15 on</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-toggles"><span>Dues and committee as board toggles</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-cal"><span>Calendar view with “Add to Google Calendar”</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-dir"><span>Directory of active members</span></label></li>
+        <li><label><input type="checkbox" data-id="pil-partiful"><span>Partiful link on events (RSVPs stay on Partiful)</span></label></li>
+      </ul>
+    </section>
+
+    <section class="day" data-group data-date="2026-11-25" data-end="2026-12-01">
+      <div class="day-head">
+        <span class="date">v2 · Nov 25 – Dec 1</span>
+        <span class="count"></span>
+      </div>
+      <h2>Thanksgiving break, then the fair</h2>
+      <ul class="checks">
+        <li><label><input type="checkbox" data-id="v2-build"><span>Build on pilot feedback (no new testers over the break)</span></label></li>
+        <li><label><input type="checkbox" data-id="v2-active"><span>Keep Supabase active over the break<small>Free projects pause after a week without activity.</small></span></label></li>
+        <li><label><input type="checkbox" data-id="v2-stretch"><span>Stretch: QR self check-in, email backup for anyone without push, or a leaderboard if the board approves</span></label></li>
+        <li><label><input type="checkbox" data-id="v2-demo"><span>Fair demo on Dec 1 with real numbers: installs, push opens, and Sunday's test</span></label></li>
+      </ul>
+    </section>
+  </details>
+
+  <footer>
+    Checks are saved in this browser only.
+    <button type="button" id="reset">Clear all checks</button>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var KEY = 'ktp-roadmap-v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { state = {}; }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  var now = new Date();
+  var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-id]'));
+  var groups = Array.prototype.slice.call(document.querySelectorAll('[data-group]'));
+
+  function update() {
+    var total = 0, done = 0;
+    groups.forEach(function (g) {
+      var bs = g.querySelectorAll('input[data-id]');
+      var d = 0;
+      for (var i = 0; i < bs.length; i++) if (bs[i].checked) d++;
+      var c = g.querySelector('.count');
+      var complete = d === bs.length;
+      var end = g.getAttribute('data-end') || g.getAttribute('data-date');
+      c.textContent = d + ' / ' + bs.length;
+      c.classList.toggle('complete', complete);
+      c.classList.toggle('behind', !complete && end < today);
+      if (g.hasAttribute('data-v1')) { total += bs.length; done += d; }
+    });
+    var pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('done').innerHTML = '<strong>' + done + '</strong> of ' + total + ' v1 steps done';
+    document.getElementById('fill').style.width = pct + '%';
+    document.querySelector('.bar').setAttribute('aria-valuenow', pct);
+  }
+
+  boxes.forEach(function (b) {
+    b.checked = !!state[b.getAttribute('data-id')];
+    b.addEventListener('change', function () {
+      var id = b.getAttribute('data-id');
+      if (b.checked) state[id] = 1; else delete state[id];
+      save();
+      update();
+    });
+  });
+
+  // Mark today's section.
+  groups.forEach(function (g) {
+    var start = g.getAttribute('data-date');
+    var end = g.getAttribute('data-end') || start;
+    if (start <= today && today <= end) {
+      var pill = document.createElement('span');
+      pill.className = 'now';
+      pill.textContent = g.hasAttribute('data-end') ? 'Now' : 'Today';
+      g.querySelector('.date').appendChild(pill);
+      if (g.closest('details')) g.closest('details').open = true;
+    }
+  });
+
+  // Countdown to the v1 deadline (Tue Nov 17, 5:30 PM, local time).
+  var due = new Date(2026, 10, 17, 17, 30);
+  var ms = due - now;
+  var dueEl = document.getElementById('due');
+  if (ms <= 0) {
+    dueEl.textContent = 'v1 was due Tue Nov 17, 5:30 PM';
+  } else {
+    var hrs = Math.floor(ms / 36e5);
+    var days = Math.floor(hrs / 24);
+    hrs = hrs % 24;
+    var parts = [];
+    if (days) parts.push(days + (days === 1 ? ' day' : ' days'));
+    parts.push(hrs + (hrs === 1 ? ' hr' : ' hrs'));
+    dueEl.textContent = parts.join(' ') + ' until v1 is due';
+  }
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (!confirm('Uncheck every step?')) return;
+    state = {};
+    save();
+    boxes.forEach(function (b) { b.checked = false; });
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
