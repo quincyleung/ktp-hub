@@ -47,7 +47,7 @@ async function checkPushStatus(): Promise<Status> {
   }
 }
 
-export default function PushSetup() {
+export default function PushSetup({ guest = false }: { guest?: boolean }) {
   const device = useDevice();
   const canPush = !!device && !device.isInApp && !(device.isIOS && !device.isStandalone);
 
@@ -169,7 +169,11 @@ export default function PushSetup() {
   } else {
     body = (
       <div className="mt-2">
-        <p>Get a notification when the board posts an event or announcement.</p>
+        <p>
+          {guest
+            ? "Members get a notification when the board posts. As a guest, you can turn them on to try a test one."
+            : "Get a notification when the board posts an event or announcement."}
+        </p>
         <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
           {busy ? "Turning on…" : "Turn on notifications"}
         </button>

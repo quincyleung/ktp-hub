@@ -41,6 +41,9 @@ export default function SignedOut() {
         Use the email the chapter has on file. We&apos;ll email you a code, so there&apos;s no
         password.
       </p>
+      <p className="mt-2 text-[15px] text-muted">
+        Not in the chapter? Any email works. You&apos;ll sign in as a guest.
+      </p>
       <Link href="/sign-in" className={primaryButton}>
         Sign in with email
       </Link>

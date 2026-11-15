@@ -2,7 +2,6 @@ import "server-only";
 import { connection } from "next/server";
 import { sendPush, type PushPayload } from "./push";
 import { db } from "./supabase";
-import type { Viewer } from "./viewer";
 
 export type Post = {
   id: string;
@@ -20,24 +19,20 @@ const COLUMNS = "id, kind, title, body, starts_at, location, created_by, created
 // Events stay on the homepage until 3 hours after they start.
 const EVENT_GRACE_MS = 3 * 60 * 60 * 1000;
 
-// Members and board see chapter posts. Guests see only their own sample posts.
-function postsFor(viewer: Viewer) {
-  const query = db().from("posts").select(COLUMNS);
-  return viewer.role === "guest"
-    ? query.eq("audience", "demo").eq("demo_owner", viewer.userId)
-    : query.eq("audience", "chapter");
-}
+// Everyone who's signed in sees the chapter's posts, guests included (for now,
+// so graders can see the feed). Only roster members get notifications for them.
+const chapterPosts = () => db().from("posts").select(COLUMNS).eq("audience", "chapter");
 
-export async function getFeed(viewer: Viewer) {
+export async function getFeed() {
   await connection();
   const now = new Date();
   const [events, announcements] = await Promise.all([
-    postsFor(viewer)
+    chapterPosts()
       .eq("kind", "event")
       .gte("starts_at", new Date(now.getTime() - EVENT_GRACE_MS).toISOString())
       .order("starts_at", { ascending: true })
       .limit(20),
-    postsFor(viewer)
+    chapterPosts()
       .eq("kind", "announcement")
       .order("created_at", { ascending: false })
       .limit(10),

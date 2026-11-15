@@ -34,10 +34,16 @@ function Welcome({ viewer }: { viewer: Viewer }) {
   const firstName = viewer.name.split(" ")[0];
   if (viewer.role === "guest") {
     return (
-      <p className="mb-6">
-        Hi {firstName}. You&apos;re signed in as a <b>guest</b>, so you&apos;ll see sample posts.
-        If you&apos;re in the chapter, sign out and sign in with the email on the roster.
-      </p>
+      <div className="mb-6 space-y-2">
+        <p>
+          Hi {firstName}. You&apos;re signed in as a <b>guest</b>. You can see the chapter&apos;s
+          events and announcements, but notifications for new posts go to members only.
+        </p>
+        <p className="text-[15px] text-muted">
+          In the chapter? Sign out (tap the circle at the top right) and sign in with the email on
+          the roster.
+        </p>
+      </div>
     );
   }
   return (
@@ -64,7 +70,7 @@ async function HomeContent() {
     <>
       <Header right={<UserButton />} />
       <Welcome viewer={viewer} />
-      <PushSetup />
+      <PushSetup guest={viewer.role === "guest"} />
       {viewer.role === "board" && <PostForm />}
       <Suspense fallback={<p className="mt-8 text-muted">Loading posts…</p>}>
         <Feed viewer={viewer} />

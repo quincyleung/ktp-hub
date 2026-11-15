@@ -77,7 +77,7 @@ function AnnouncementItem({ post, now, canDelete }: { post: Post; now: Date; can
 }
 
 export default async function Feed({ viewer }: { viewer: Viewer }) {
-  const { now, events, announcements, failed } = await getFeed(viewer);
+  const { now, events, announcements, failed } = await getFeed();
   const canDelete = viewer.role === "board";
 
   if (failed) {

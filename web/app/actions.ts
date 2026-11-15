@@ -12,6 +12,12 @@ const WELCOME = {
   url: "/",
 };
 
+const GUEST_WELCOME = {
+  title: "Notifications work",
+  body: "This is what KTP Hub notifications look like. Board posts notify chapter members only.",
+  url: "/",
+};
+
 const TEST = {
   title: "Test notification",
   body: "If you can read this, notifications work on this device.",
@@ -42,7 +48,7 @@ export async function saveDevice(input: unknown, welcome: boolean): Promise<Acti
     if (error) throw new Error(error.message);
     if (!welcome) return { ok: true };
 
-    const result = await sendPush(sub, WELCOME);
+    const result = await sendPush(sub, viewer.role === "guest" ? GUEST_WELCOME : WELCOME);
     if (result.ok) return { ok: true };
     if (result.gone) {
       await forget(sub.endpoint);
