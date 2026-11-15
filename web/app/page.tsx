@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { getViewer, type Viewer } from "@/lib/viewer";
+import Feed from "./feed";
+import PostForm from "./post-form";
 import PushSetup from "./push-setup";
 import SignedOut from "./signed-out";
 
@@ -63,9 +65,10 @@ async function HomeContent() {
       <Header right={<UserButton />} />
       <Welcome viewer={viewer} />
       <PushSetup />
-      <p className="mt-8 text-center text-sm text-muted">
-        Events and announcements will show up here.
-      </p>
+      {viewer.role === "board" && <PostForm />}
+      <Suspense fallback={<p className="mt-8 text-muted">Loading posts…</p>}>
+        <Feed viewer={viewer} />
+      </Suspense>
     </>
   );
 }

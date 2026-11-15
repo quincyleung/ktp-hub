@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { saveDevice, sendTestToMe } from "./actions";
 import { useDevice } from "./device";
 import { InAppBrowserNote, InstallSteps } from "./install-steps";
-import { card, primaryButton, secondaryButton } from "./ui";
+import { card, primaryButton } from "./ui";
 
 type Status = "checking" | "unsupported" | "ready" | "blocked" | "on";
 
@@ -152,11 +152,17 @@ export default function PushSetup() {
       </div>
     );
   } else if (status === "on") {
+    // Compact once it's on, so the posts stay near the top.
     body = (
-      <div className="mt-2">
-        <p className="font-semibold">Notifications are on ✓</p>
-        <button type="button" className={secondaryButton} onClick={sendTest} disabled={busy}>
-          {busy ? "Sending…" : "Send me a test notification"}
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="font-semibold">On for this device ✓</p>
+        <button
+          type="button"
+          className="h-10 shrink-0 rounded-lg border border-line bg-background px-4 text-[15px] font-semibold disabled:opacity-60"
+          onClick={sendTest}
+          disabled={busy}
+        >
+          {busy ? "Sending…" : "Send a test"}
         </button>
       </div>
     );
