@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
-  subsets: ["latin"],
+// Inter is close to the iPhone's own font. Greek is for the ΚΘΠ letters.
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "greek"],
 });
 
 export const metadata: Metadata = {
@@ -16,12 +17,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#234c8b",
+  // Lets the tab bar sit above the iPhone home indicator (safe-area padding).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${sourceSans.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans text-[17px] leading-relaxed">
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col font-sans text-[17px] leading-normal">
         <ClerkProvider signInUrl="/sign-in" appearance={{ variables: { colorPrimary: "#234c8b" } }}>
           {children}
         </ClerkProvider>

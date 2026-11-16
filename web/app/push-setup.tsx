@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { saveDevice, sendTestToMe } from "./actions";
 import { useDevice } from "./device";
 import { InAppBrowserNote, InstallSteps } from "./install-steps";
-import { card, primaryButton } from "./ui";
+import { Spinner } from "./spinner";
+import { card, primaryButton, sectionTitle } from "./ui";
 
 type Status = "checking" | "unsupported" | "ready" | "blocked" | "on";
 
@@ -47,7 +49,13 @@ async function checkPushStatus(): Promise<Status> {
   }
 }
 
-export default function PushSetup({ guest = false }: { guest?: boolean }) {
+// Where it's shown:
+// - "home": a card that only shows until notifications are on (new people start here).
+// - "banner": the bell page, just a "Turn on notifications" button while they're off.
+// - "settings": the full card, with "Send a test" and the device check.
+type Mode = "home" | "banner" | "settings";
+
+export default function PushSetup({ guest = false, mode = "home" }: { guest?: boolean; mode?: Mode }) {
   const device = useDevice();
   const canPush = !!device && !device.isInApp && !(device.isIOS && !device.isStandalone);
 
@@ -124,9 +132,67 @@ export default function PushSetup({ guest = false }: { guest?: boolean }) {
     }
   }
 
+  // On Home and the bell page, stay out of the way while checking and once
+  // it's on, but keep showing the confirmation right after someone turns it on.
+  const quietlyOn = status === "on" && !message && !error;
+  if (mode !== "settings" && (!device || (canPush && (status === "checking" || quietlyOn)))) {
+    return null;
+  }
+
+  const feedback = (
+    <>
+      {message && (
+        <p role="status" className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
+          {message}
+        </p>
+      )}
+      {error && (
+        <p
+          role="alert"
+          className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[15px] text-red-700 dark:text-red-300"
+        >
+          {error}
+        </p>
+      )}
+    </>
+  );
+
+  if (mode === "banner") {
+    if (canPush && (status === "ready" || status === "on")) {
+      return (
+        <div className="mt-2">
+          {status === "ready" && (
+            <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
+              {busy ? (
+                <>
+                  <Spinner /> Turning on…
+                </>
+              ) : (
+                "Turn on notifications"
+              )}
+            </button>
+          )}
+          {feedback}
+        </div>
+      );
+    }
+    return (
+      <p className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
+        Notifications aren&apos;t on for this phone.{" "}
+        <Link href="/settings" className="font-semibold text-accent underline underline-offset-2">
+          See how in Settings
+        </Link>
+      </p>
+    );
+  }
+
   let body: React.ReactNode;
   if (!device || (canPush && status === "checking")) {
-    body = <p className="mt-2 text-muted">Checking this device…</p>;
+    body = (
+      <p className="mt-2 flex items-center gap-2 text-muted">
+        <Spinner className="h-4 w-4" /> Checking this device…
+      </p>
+    );
   } else if (device.isInApp) {
     body = <InAppBrowserNote />;
   } else if (device.isIOS && !device.isStandalone) {
@@ -158,11 +224,17 @@ export default function PushSetup({ guest = false }: { guest?: boolean }) {
         <p className="font-semibold">On for this device ✓</p>
         <button
           type="button"
-          className="h-10 shrink-0 rounded-lg border border-line bg-background px-4 text-[15px] font-semibold disabled:opacity-60"
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-line bg-background px-4 text-[15px] font-semibold transition active:opacity-80 disabled:opacity-60"
           onClick={sendTest}
           disabled={busy}
         >
-          {busy ? "Sending…" : "Send a test"}
+          {busy ? (
+            <>
+              <Spinner className="h-4 w-4" /> Sending…
+            </>
+          ) : (
+            "Send a test"
+          )}
         </button>
       </div>
     );
@@ -175,7 +247,13 @@ export default function PushSetup({ guest = false }: { guest?: boolean }) {
             : "Get a notification when the board posts an event or announcement."}
         </p>
         <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
-          {busy ? "Turning on…" : "Turn on notifications"}
+          {busy ? (
+                <>
+                  <Spinner /> Turning on…
+                </>
+              ) : (
+                "Turn on notifications"
+              )}
         </button>
         <p className="mt-2 text-sm text-muted">Your phone will ask for permission. Tap Allow.</p>
       </div>
@@ -183,23 +261,11 @@ export default function PushSetup({ guest = false }: { guest?: boolean }) {
   }
 
   return (
-    <section className={card}>
-      <h2 className="font-serif text-2xl leading-tight">Notifications</h2>
+    <section className={`${card} ${mode === "home" ? "mt-6" : ""}`}>
+      {mode === "home" && <h2 className={sectionTitle}>Notifications</h2>}
       {body}
-      {message && (
-        <p role="status" className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[15px] text-red-700 dark:text-red-300"
-        >
-          {error}
-        </p>
-      )}
-      {device && (
+      {feedback}
+      {mode === "settings" && device && (
         <p className="mt-5 text-xs text-muted">
           Device check: {device.isIOS ? "iPhone/iPad" : "not iPhone"} ·{" "}
           {device.isStandalone ? "home screen" : "browser"} · {status}

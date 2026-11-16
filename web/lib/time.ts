@@ -17,16 +17,43 @@ const dateFmt = new Intl.DateTimeFormat("en-US", {
 const monthDayFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
 const weekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" });
 const dayOfMonthFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, day: "numeric" });
+const monthFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short" });
+
+const longDateFmt = new Intl.DateTimeFormat("en-US", {
+  timeZone: TZ,
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
 
 const DAY = 24 * 60 * 60 * 1000;
 const sameDay = (a: Date, b: Date) => dayKeyFmt.format(a) === dayKeyFmt.format(b);
 
-/** "Today", "Tomorrow", or "Sun, Nov 16". */
-export function eventDay(start: Date, now: Date) {
-  if (sameDay(start, now)) return "Today";
-  if (sameDay(start, new Date(now.getTime() + DAY))) return "Tomorrow";
-  return dateFmt.format(start);
+/** "2026-11-16": the day in Chicago, for grouping events by day. */
+export const dayKey = (d: Date) => dayKeyFmt.format(d);
+
+/** "Monday, November 16" */
+export const longDate = (d: Date) => longDateFmt.format(d);
+
+// A "YYYY-MM-DD" day as a Date at 18:00 UTC (noon in Chicago), which is the same day in
+// Chicago and UTC, so it formats correctly without time-zone surprises.
+const dayToDate = (day: string) => new Date(`${day}T18:00:00Z`);
+
+/** "Monday, November 16" for a YYYY-MM-DD day. */
+export const longDay = (day: string) => longDateFmt.format(dayToDate(day));
+
+/** { weekday: "Mon", month: "Nov", day: "16" } for a YYYY-MM-DD day. */
+export const dayBadge = (day: string) => dateBadge(dayToDate(day));
+
+/** "Today", "Tomorrow", or "Sun, Nov 16" for a YYYY-MM-DD day. */
+export function dayLabel(day: string, now: Date) {
+  if (day === dayKey(now)) return "Today";
+  if (day === dayKey(new Date(now.getTime() + DAY))) return "Tomorrow";
+  return dateFmt.format(dayToDate(day));
 }
+
+/** "Today", "Tomorrow", or "Sun, Nov 16". */
+export const eventDay = (start: Date, now: Date) => dayLabel(dayKey(start), now);
 
 /** "7:00 PM" */
 export const clockTime = (d: Date) => timeFmt.format(d);
@@ -34,8 +61,21 @@ export const clockTime = (d: Date) => timeFmt.format(d);
 /** "Sun, Nov 16, 7:00 PM". Used in notifications, which may be read days later. */
 export const fullDateTime = (d: Date) => `${dateFmt.format(d)}, ${timeFmt.format(d)}`;
 
-/** The little calendar square on event cards: { weekday: "Sun", day: "16" }. */
-export const dateBadge = (d: Date) => ({ weekday: weekdayFmt.format(d), day: dayOfMonthFmt.format(d) });
+/** The little calendar square on event cards: { weekday: "Sun", month: "Nov", day: "16" }. */
+export const dateBadge = (d: Date) => ({
+  weekday: weekdayFmt.format(d),
+  month: monthFmt.format(d),
+  day: dayOfMonthFmt.format(d),
+});
+
+/** "Today", "Tomorrow", "In 3 days" (or "3 days ago") for a YYYY-MM-DD day. */
+export function daysAway(day: string, now: Date) {
+  const days = Math.round((Date.parse(day) - Date.parse(dayKey(now))) / DAY);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  return days > 0 ? `In ${days} days` : `${-days} days ago`;
+}
 
 /** "just now", "5 min ago", "3 h ago", "yesterday", or "Nov 12". */
 export function timeAgo(then: Date, now: Date) {

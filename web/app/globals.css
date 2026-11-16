@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
-/* Same palette as the proposal page. */
+/* KTP blue (the same blue as KTP's app art), on white pages with light gray cards. */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --muted: #525252;
-  --surface: #f5f7fb;
-  --line: #e2e6ee;
-  --accent: #234c8b;
+  --foreground: #111114;
+  --muted: #6e6e73;
+  --surface: #f4f4f6;
+  --line: #e5e5ea;
+  --accent: #234c8b; /* text, icons, outlines */
+  --navy: #234c8b; /* solid fills with white text */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0d1424;
-    --foreground: #eef1f6;
-    --muted: #a8b0bf;
-    --surface: #151f35;
-    --line: #263452;
+    --background: #0b0f19;
+    --foreground: #f2f3f7;
+    --muted: #a1a7b3;
+    --surface: #161c2a;
+    --line: #262e40;
     --accent: #8bb9ff;
+    --navy: #2f5fae;
   }
 }
 
@@ -28,12 +30,47 @@
   --color-surface: var(--surface);
   --color-line: var(--line);
   --color-accent: var(--accent);
-  --color-navy: #234c8b;
-  --font-sans: var(--font-source-sans), system-ui, -apple-system, sans-serif;
-  --font-serif: Palatino, "Palatino Linotype", "Book Antiqua", serif;
+  --color-navy: var(--navy);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+
+  /* The KTP spinner: the arc grows and shrinks as the ring turns. */
+  --animate-ring-turn: ring-turn 1.4s linear infinite;
+  --animate-ring-arc: ring-arc 1.4s ease-in-out infinite;
+
+  @keyframes ring-turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes ring-arc {
+    0% {
+      stroke-dasharray: 1 132;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 85 132;
+      stroke-dashoffset: -20;
+    }
+    100% {
+      stroke-dasharray: 85 132;
+      stroke-dashoffset: -131;
+    }
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The dotted halftone from KTP's app art, fading out from the top right. Decorative. */
+@utility halftone {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 45%, transparent) 1.3px,
+    transparent 1.7px
+  );
+  background-size: 10px 10px;
+  mask-image: radial-gradient(ellipse at top right, black 0%, transparent 70%);
 }

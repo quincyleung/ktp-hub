@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { notifyChapter } from "@/lib/posts";
+import { notifyChapter, UUID } from "@/lib/posts";
 import { db } from "@/lib/supabase";
 import { fullDateTime } from "@/lib/time";
 import { getViewer } from "@/lib/viewer";
@@ -50,6 +50,7 @@ export async function createPost(form: FormData): Promise<PostResult> {
       location: location || null,
       notify,
       created_by: viewer.name,
+      author_email: viewer.email,
     })
     .select("id")
     .single();
@@ -60,7 +61,7 @@ export async function createPost(form: FormData): Promise<PostResult> {
 
   let message = "Posted without a notification.";
   if (notify) {
-    const url = `/?post=${data.id}#post-${data.id}`;
+    const url = `/posts/${data.id}`;
     const payload = startsAt
       ? {
           title: `New event: ${title}`,
@@ -89,8 +90,6 @@ export async function createPost(form: FormData): Promise<PostResult> {
   return { ok: true, message };
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 // Board only: removes a chapter post from the homepage.
 export async function deletePost(id: string): Promise<PostResult> {
   const viewer = await getViewer();
@@ -104,4 +103,16 @@ export async function deletePost(id: string): Promise<PostResult> {
   }
   refresh();
   return { ok: true, message: "Deleted." };
+}
+
+// Likes on the notifications feed. Anyone signed in can like a post.
+export async function setLike(postId: string, like: boolean): Promise<{ ok: boolean }> {
+  const viewer = await getViewer();
+  if (!viewer || typeof postId !== "string" || !UUID.test(postId)) return { ok: false };
+  const likes = db().from("post_likes");
+  const { error } = like
+    ? await likes.upsert({ post_id: postId, user_id: viewer.userId }, { ignoreDuplicates: true })
+    : await likes.delete().eq("post_id", postId).eq("user_id", viewer.userId);
+  if (error) console.error("setLike failed:", error.message);
+  return { ok: !error };
 }

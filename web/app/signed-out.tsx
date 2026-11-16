@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useDevice } from "./device";
 import { InAppBrowserNote, InstallSteps } from "./install-steps";
-import { card, primaryButton } from "./ui";
+import { Spinner } from "./spinner";
+import { card, primaryButton, sectionTitle } from "./ui";
 
 export default function SignedOut() {
   const device = useDevice();
@@ -11,7 +12,9 @@ export default function SignedOut() {
   if (!device) {
     return (
       <section className={card}>
-        <p className="text-muted">Checking this device…</p>
+        <p className="flex items-center gap-2 text-muted">
+          <Spinner className="h-4 w-4" /> Checking this device…
+        </p>
       </section>
     );
   }
@@ -19,7 +22,7 @@ export default function SignedOut() {
   if (device.isInApp) {
     return (
       <section className={card}>
-        <h2 className="font-serif text-2xl leading-tight">Open in your browser</h2>
+        <h2 className={sectionTitle}>Open in your browser</h2>
         <InAppBrowserNote />
       </section>
     );
@@ -28,7 +31,7 @@ export default function SignedOut() {
   if (device.isIOS && !device.isStandalone) {
     return (
       <section className={card}>
-        <h2 className="font-serif text-2xl leading-tight">Get KTP Hub</h2>
+        <h2 className={sectionTitle}>Get KTP Hub</h2>
         <InstallSteps />
       </section>
     );
@@ -36,7 +39,7 @@ export default function SignedOut() {
 
   return (
     <section className={card}>
-      <h2 className="font-serif text-2xl leading-tight">Sign in</h2>
+      <h2 className={sectionTitle}>Sign in</h2>
       <p className="mt-2">
         Use the email the chapter has on file. We&apos;ll email you a code, so there&apos;s no
         password.

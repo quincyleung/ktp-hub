@@ -8,7 +8,8 @@
 // The sheet is the source of truth: people on it are added or updated, and
 // people no longer on it are removed (they become guests). Safe to re-run.
 // Columns are found by header, in any order and any case: Name, Email, Year,
-// Role (Board or Member), Status. Merged email cells are fine.
+// Role (Board or Member), Status (blank for brothers, or Pledge or Alumni).
+// Merged email cells are fine.
 // The SQL goes to stdout; a summary goes to stderr, so piping to pbcopy works.
 
 import { existsSync, readFileSync } from "node:fs";
@@ -94,6 +95,15 @@ rows.slice(1).forEach((r, i) => {
     return errors.push(`row ${line}: role "${cell(r, cols.role)}" should be Board or Member`);
   }
 
+  // Status sorts people in the app's People tab. Blank means an active brother.
+  const statusRaw = cell(r, cols.status).toLowerCase();
+  let status = null;
+  if (statusRaw.startsWith("pledge")) status = "pledge";
+  else if (statusRaw.startsWith("alum")) status = "alumni";
+  else if (statusRaw && !["brother", "active", "member"].includes(statusRaw)) {
+    return errors.push(`row ${line}: status "${cell(r, cols.status)}" should be blank, Brother, Pledge or Alumni`);
+  }
+
   let name = cell(r, cols.name);
   if (!name) {
     name = email.split("@")[0]; // placeholder until the sheet has a name
@@ -105,7 +115,7 @@ rows.slice(1).forEach((r, i) => {
     name,
     email,
     year: cell(r, cols.year) || null,
-    status: cell(r, cols.status) || null,
+    status,
     role: roleRaw || "member",
   });
 });
@@ -131,7 +141,8 @@ ${values}
 on conflict (email_lower) do update
   set name = excluded.name,
       email = excluded.email,
-      year = excluded.year,
+      -- Members set their own graduation year at onboarding; the sheet only fills in blanks.
+      year = coalesce(public.members.year, excluded.year),
       status = excluded.status,
       role = excluded.role;
 
