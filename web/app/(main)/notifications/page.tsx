@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -12,13 +11,13 @@ import { SettingsIcon } from "../../icons";
 import LikeButton from "../../like-button";
 import PageHeader from "../../page-header";
 import PushSetup from "../../push-setup";
-import { Loading } from "../../spinner";
+import { PageSuspense } from "../../spinner";
 
 export const metadata: Metadata = { title: "Notifications · KTP Hub" };
 
 export default function NotificationsPage() {
   return (
-    <>
+    <PageSuspense label="Loading posts">
       <PageHeader title="Notifications" subtitle="Posts from the board">
         <Link
           href="/settings"
@@ -28,10 +27,8 @@ export default function NotificationsPage() {
           <SettingsIcon />
         </Link>
       </PageHeader>
-      <Suspense fallback={<Loading label="Loading posts" />}>
-        <NotificationsContent />
-      </Suspense>
-    </>
+      <NotificationsContent />
+    </PageSuspense>
   );
 }
 

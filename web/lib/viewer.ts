@@ -49,7 +49,8 @@ export async function getViewer(): Promise<Viewer | null> {
   const primary = user.primaryEmailAddress;
   const verified = primary?.verification?.status === "verified";
   const email = (primary?.emailAddress ?? "").trim().toLowerCase();
-  const fallbackName = user.firstName ?? email.split("@")[0] ?? "there";
+  // Guests sign up with just an email, so most have no name. Don't greet them by their email.
+  const fallbackName = user.firstName?.trim() ?? "";
   const guest: Viewer = {
     userId: user.id,
     email,

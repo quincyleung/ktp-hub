@@ -1,22 +1,19 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getPeople } from "@/lib/people";
 import { getViewer } from "@/lib/viewer";
 import PageHeader from "../../page-header";
 import PeopleView from "../../people-view";
-import { Loading } from "../../spinner";
+import { PageSuspense } from "../../spinner";
 
 export const metadata: Metadata = { title: "People · KTP Hub" };
 
 export default function PeoplePage() {
   return (
-    <>
+    <PageSuspense label="Loading the directory">
       <PageHeader title="People" subtitle="Discover who's in the chapter" />
-      <Suspense fallback={<Loading label="Loading the directory" />}>
-        <PeopleContent />
-      </Suspense>
-    </>
+      <PeopleContent />
+    </PageSuspense>
   );
 }
 

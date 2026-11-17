@@ -55,6 +55,17 @@ async function checkPushStatus(): Promise<Status> {
 // - "settings": the full card, with "Send a test" and the device check.
 type Mode = "home" | "banner" | "settings";
 
+// Home and the bell page only learn whether to show this after a quick check on
+// the phone, so it slides open instead of shoving the posts down all at once.
+// The inner padding keeps the button's focus outline from being clipped.
+function SlideOpen({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid animate-expand motion-reduce:animate-none">
+      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
+    </div>
+  );
+}
+
 export default function PushSetup({ guest = false, mode = "home" }: { guest?: boolean; mode?: Mode }) {
   const device = useDevice();
   const canPush = !!device && !device.isInApp && !(device.isIOS && !device.isStandalone);
@@ -160,7 +171,8 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
   if (mode === "banner") {
     if (canPush && (status === "ready" || status === "on")) {
       return (
-        <div className="mt-2">
+        <SlideOpen>
+          <div className="mt-2">
           {status === "ready" && (
             <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
               {busy ? (
@@ -173,26 +185,27 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
             </button>
           )}
           {feedback}
-        </div>
+          </div>
+        </SlideOpen>
       );
     }
     return (
-      <p className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
-        Notifications aren&apos;t on for this phone.{" "}
-        <Link href="/settings" className="font-semibold text-accent underline underline-offset-2">
-          See how in Settings
-        </Link>
-      </p>
+      <SlideOpen>
+        <p className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
+          Notifications aren&apos;t on for this phone.{" "}
+          <Link href="/settings" className="font-semibold text-accent underline underline-offset-2">
+            See how in Settings
+          </Link>
+        </p>
+      </SlideOpen>
     );
   }
 
   let body: React.ReactNode;
-  if (!device || (canPush && status === "checking")) {
-    body = (
-      <p className="mt-2 flex items-center gap-2 text-muted">
-        <Spinner className="h-4 w-4" /> Checking this device…
-      </p>
-    );
+  const checking = !device || (canPush && status === "checking");
+  if (checking) {
+    // Takes a split second. Hold the space quietly instead of flashing a spinner.
+    body = <div className="mt-2 h-10" aria-hidden="true" />;
   } else if (device.isInApp) {
     body = <InAppBrowserNote />;
   } else if (device.isIOS && !device.isStandalone) {
@@ -260,12 +273,15 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
     );
   }
 
-  return (
+  const section = (
     <section className={`${card} ${mode === "home" ? "mt-6" : ""}`}>
       {mode === "home" && <h2 className={sectionTitle}>Notifications</h2>}
-      {body}
+      {/* Fades in once the check is done (Settings shows the card while checking). */}
+      <div key={checking ? "checking" : "ready"} className="animate-fade-in motion-reduce:animate-none">
+        {body}
+      </div>
       {feedback}
-      {mode === "settings" && device && (
+      {mode === "settings" && !checking && device && (
         <p className="mt-5 text-xs text-muted">
           Device check: {device.isIOS ? "iPhone/iPad" : "not iPhone"} ·{" "}
           {device.isStandalone ? "home screen" : "browser"} · {status}
@@ -273,4 +289,5 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
       )}
     </section>
   );
+  return mode === "home" ? <SlideOpen>{section}</SlideOpen> : section;
 }

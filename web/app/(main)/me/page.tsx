@@ -1,15 +1,14 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/viewer";
 import { pageTitle } from "../../ui";
-import { Loading } from "../../spinner";
+import { PageSuspense } from "../../spinner";
 
 // "My profile" in the profile-picture menu: opens your own profile page.
 export default function MePage() {
   return (
-    <Suspense fallback={<Loading />}>
+    <PageSuspense>
       <GoToMyProfile />
-    </Suspense>
+    </PageSuspense>
   );
 }
 

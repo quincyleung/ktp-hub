@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/people";
@@ -7,7 +6,7 @@ import { getViewer } from "@/lib/viewer";
 import OnboardingForm from "../onboarding-form";
 import { BrandMark } from "../page-header";
 import { pageTitle } from "../ui";
-import { Loading } from "../spinner";
+import { PageSuspense } from "../spinner";
 
 export const metadata: Metadata = { title: "Welcome · KTP Hub" };
 
@@ -17,9 +16,9 @@ export const metadata: Metadata = { title: "Welcome · KTP Hub" };
 export default function WelcomePage() {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 pb-16 pt-[calc(env(safe-area-inset-top)+2.5rem)]">
-      <Suspense fallback={<Loading />}>
+      <PageSuspense>
         <Welcome />
-      </Suspense>
+      </PageSuspense>
     </main>
   );
 }

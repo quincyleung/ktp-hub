@@ -25,7 +25,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans text-[17px] leading-normal">
-        <ClerkProvider signInUrl="/sign-in" appearance={{ variables: { colorPrimary: "#234c8b" } }}>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          appearance={{
+            variables: { colorPrimary: "#234c8b" },
+            // Clerk's forms ease in like the app's pages.
+            elements: { rootBox: "animate-page-in motion-reduce:animate-none" },
+          }}
+          localization={{
+            signUp: {
+              start: {
+                // The app knows members by the email on the chapter roster.
+                subtitle: "In the chapter? Use the email the chapter has on file. Anyone else can join as a guest.",
+              },
+            },
+          }}
+        >
           {children}
         </ClerkProvider>
       </body>

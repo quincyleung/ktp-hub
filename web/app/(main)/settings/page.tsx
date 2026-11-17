@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -8,7 +7,7 @@ import BackButton from "../../back-button";
 import { ChevronRight } from "../../icons";
 import PageHeader from "../../page-header";
 import PushSetup from "../../push-setup";
-import { Loading } from "../../spinner";
+import { PageSuspense } from "../../spinner";
 import { card } from "../../ui";
 
 export const metadata: Metadata = { title: "Settings · KTP Hub" };
@@ -17,13 +16,11 @@ const sectionHeading = "mb-2 text-sm font-bold uppercase tracking-wide text-mute
 
 export default function SettingsPage() {
   return (
-    <>
+    <PageSuspense label="Loading settings">
       <BackButton />
       <PageHeader title="Settings" />
-      <Suspense fallback={<Loading />}>
-        <SettingsContent />
-      </Suspense>
-    </>
+      <SettingsContent />
+    </PageSuspense>
   );
 }
 

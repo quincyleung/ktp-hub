@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/people";
@@ -7,19 +6,17 @@ import { getViewer } from "@/lib/viewer";
 import BackButton from "../../../back-button";
 import ProfileForm from "../../../profile-form";
 import { pageTitle } from "../../../ui";
-import { Loading } from "../../../spinner";
+import { PageSuspense } from "../../../spinner";
 
 export const metadata: Metadata = { title: "Edit profile · KTP Hub" };
 
 export default function EditProfilePage() {
   return (
-    <>
+    <PageSuspense label="Loading your profile">
       <BackButton />
       <h1 className={pageTitle}>Edit your profile</h1>
-      <Suspense fallback={<Loading />}>
-        <EditProfile />
-      </Suspense>
-    </>
+      <EditProfile />
+    </PageSuspense>
   );
 }
 

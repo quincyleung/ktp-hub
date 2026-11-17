@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { mapsUrl } from "@/lib/chapter";
@@ -11,17 +10,15 @@ import DeletePost from "../../../delete-post";
 import { ClockIcon, PinIcon } from "../../../icons";
 import Linkified from "../../../linkified";
 import { pageTitle } from "../../../ui";
-import { Loading } from "../../../spinner";
+import { PageSuspense } from "../../../spinner";
 
 // One event or announcement. Notifications open this page.
 export default function PostPage({ params }: PageProps<"/posts/[id]">) {
   return (
-    <>
+    <PageSuspense label="Loading the post">
       <BackButton />
-      <Suspense fallback={<Loading />}>
-        <PostView params={params} />
-      </Suspense>
-    </>
+      <PostView params={params} />
+    </PageSuspense>
   );
 }
 

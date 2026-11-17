@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 // Loading indicators. The big one is KTP's: a blue ring, like the points rings
 // in KTP's app art, turning around the chapter's letters.
 
@@ -34,13 +36,27 @@ export function KtpSpinner({ size = 64 }: { size?: number }) {
   );
 }
 
-// For a page or section that's still loading.
-export function Loading({ label = "Loading", className = "py-16" }: { label?: string; className?: string }) {
+// A page that's still loading: only the ring, in the middle of the screen
+// (the top bar and tabs stay put). Every page's spinner sits in the same spot,
+// so going from one loading step to the next doesn't jump.
+export function PageLoading({ label = "Loading" }: { label?: string }) {
   return (
-    <div role="status" className={`flex flex-col items-center justify-center gap-3 ${className}`}>
-      <KtpSpinner />
-      <p className="text-[15px] text-muted">{label}…</p>
+    <div role="status" className="pointer-events-none fixed inset-0 flex items-center justify-center">
+      <span className="animate-spinner-in motion-reduce:animate-none">
+        <KtpSpinner />
+      </span>
+      <span className="sr-only">{label}…</span>
     </div>
+  );
+}
+
+// Wrap a page in this: the spinner until everything on it is ready, then the
+// whole page eases in at once, instead of a header with a spinner under it.
+export function PageSuspense({ label, children }: { label?: string; children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoading label={label} />}>
+      <div className="animate-page-in motion-reduce:animate-none">{children}</div>
+    </Suspense>
   );
 }
 

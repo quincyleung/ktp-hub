@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { BADGE } from "@/lib/roles";
 import { getViewer } from "@/lib/viewer";
@@ -6,14 +5,14 @@ import HomeFeed from "../feed";
 import { BrandMark } from "../page-header";
 import PushSetup from "../push-setup";
 import SignedOut from "../signed-out";
-import { Loading } from "../spinner";
+import { PageSuspense } from "../spinner";
 import { pageTitle } from "../ui";
 
 export default function Home() {
   return (
-    <Suspense fallback={<Loading />}>
+    <PageSuspense>
       <HomeContent />
-    </Suspense>
+    </PageSuspense>
   );
 }
 
@@ -22,18 +21,21 @@ async function HomeContent() {
 
   if (!viewer) {
     return (
-      <>
-        <header className="relative isolate mb-8">
-          <div aria-hidden="true" className="halftone pointer-events-none absolute -right-6 -top-12 -z-10 h-64 w-72" />
-          <BrandMark size={56} />
-          <p className="mt-5 text-[13px] font-bold uppercase tracking-[0.08em] text-accent">Kappa Theta Pi</p>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight">
-            <span className="text-accent">KTP</span> Hub
-          </h1>
-          <p className="mt-1 text-muted">Chapter events and announcements, sent to your phone.</p>
+      <div className="flex flex-1 flex-col">
+        <header className="relative isolate flex flex-1 flex-col items-center justify-center py-12 text-center">
+          <BrandMark size={72} />
+          <div className="relative mt-6">
+            <div aria-hidden="true" className="halftone pointer-events-none absolute -right-10 -top-28 -z-10 h-56 w-64" />
+            <h1 className="text-[30px] font-extrabold uppercase leading-tight tracking-[0.04em]">
+              Kappa Theta Pi
+            </h1>
+          </div>
+          <p className="mt-2 max-w-xs text-muted">
+            UChicago&apos;s premier professional technology fraternity.
+          </p>
         </header>
         <SignedOut />
-      </>
+      </div>
     );
   }
 
@@ -43,7 +45,7 @@ async function HomeContent() {
   return (
     <>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className={pageTitle}>Hi, {firstName}</h1>
+        <h1 className={pageTitle}>{firstName ? `Hi, ${firstName}` : "Welcome"}</h1>
         <span
           className={`rounded-full px-2.5 py-0.5 text-sm font-bold ${
             viewer.type === "board" ? "bg-navy text-white" : "bg-accent/10 text-accent"
@@ -66,9 +68,7 @@ async function HomeContent() {
         </div>
       )}
       <PushSetup guest={viewer.role === "guest"} />
-      <Suspense fallback={<Loading label="Loading posts" />}>
-        <HomeFeed isBoard={viewer.role === "board"} />
-      </Suspense>
+      <HomeFeed isBoard={viewer.role === "board"} />
     </>
   );
 }

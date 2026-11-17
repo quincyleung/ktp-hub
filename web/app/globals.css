@@ -37,6 +37,35 @@
   --animate-ring-turn: ring-turn 1.4s linear infinite;
   --animate-ring-arc: ring-arc 1.4s ease-in-out infinite;
 
+  /* Loading: the spinner waits a beat before showing, so quick loads don't
+     flash it. Pages then ease in, and cards that show up late slide open. */
+  --animate-spinner-in: fade-in 200ms ease-out 250ms both;
+  --animate-fade-in: fade-in 200ms ease-out both;
+  --animate-page-in: page-in 250ms ease-out both;
+  --animate-expand: expand 300ms ease-out both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes expand {
+    from {
+      grid-template-rows: 0fr;
+      opacity: 0;
+    }
+    to {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+  }
+
   @keyframes ring-turn {
     to {
       transform: rotate(360deg);

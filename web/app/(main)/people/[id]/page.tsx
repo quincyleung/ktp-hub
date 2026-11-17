@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/people";
@@ -8,16 +7,14 @@ import Avatar from "../../../avatar";
 import BackButton from "../../../back-button";
 import { LinkedInIcon } from "../../../icons";
 import { primaryButton, secondaryButton } from "../../../ui";
-import { Loading } from "../../../spinner";
+import { PageSuspense } from "../../../spinner";
 
 export default function PersonPage({ params }: PageProps<"/people/[id]">) {
   return (
-    <>
+    <PageSuspense label="Loading the profile">
       <BackButton />
-      <Suspense fallback={<Loading />}>
-        <ProfileView params={params} />
-      </Suspense>
-    </>
+      <ProfileView params={params} />
+    </PageSuspense>
   );
 }
 
