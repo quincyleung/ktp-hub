@@ -19,7 +19,8 @@ export type Post = {
 };
 
 const COLUMNS = "id, kind, title, body, starts_at, location, created_by, created_at";
-const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
 // Events count as upcoming until 3 hours after they start.
 const EVENT_GRACE_MS = 3 * 60 * 60 * 1000;
@@ -141,24 +142,40 @@ export async function getUpdates(userId: string) {
   return { now, updates, failed: !!error };
 }
 
-/** Events today and tomorrow (board posts and the Google Calendar), for reminders. */
-export async function getSoonEvents() {
+/** A reminder in the notifications feed, "posted" a day and an hour before an event. */
+export type Reminder = { key: string; at: number; lead: "day" | "hour"; event: CalendarItem };
+
+/**
+ * Reminders that are out by now: one a day before each event and one an hour
+ * before, until the event starts. All-day events don't get them (no start time).
+ */
+export async function getReminders(): Promise<{ now: Date; reminders: Reminder[] }> {
   const { now, upcoming } = await getHomeFeed();
-  const today = dayKey(now);
-  const tomorrow = dayKey(new Date(now.getTime() + DAY));
-  return upcoming.filter((e) => e.day === today || e.day === tomorrow);
+  const t = now.getTime();
+  const reminders: Reminder[] = [];
+  for (const event of upcoming) {
+    const start = Date.parse(event.start);
+    if (event.allDay || start <= t) continue;
+    if (t >= start - DAY) reminders.push({ key: `${event.key}:day`, at: start - DAY, lead: "day", event });
+    if (t >= start - HOUR) reminders.push({ key: `${event.key}:hour`, at: start - HOUR, lead: "hour", event });
+  }
+  return { now, reminders };
 }
 
-/** When the newest post went up (ms), for the bell's unread dot. */
+/** When the newest post or reminder went out (ms), for the bell's unread dot. */
 export async function getLatestPostAt(): Promise<number | null> {
-  const { data } = await db()
-    .from("posts")
-    .select("created_at")
-    .eq("audience", "chapter")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data ? Date.parse(data.created_at as string) : null;
+  const [{ data }, { reminders }] = await Promise.all([
+    db()
+      .from("posts")
+      .select("created_at")
+      .eq("audience", "chapter")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getReminders(),
+  ]);
+  const times = [...(data ? [Date.parse(data.created_at as string)] : []), ...reminders.map((r) => r.at)];
+  return times.length ? Math.max(...times) : null;
 }
 
 // Supabase filters go in the URL, so long lists of endpoints go in batches.

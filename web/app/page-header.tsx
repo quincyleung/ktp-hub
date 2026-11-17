@@ -1,21 +1,10 @@
 import { pageTitle } from "./ui";
 
-// A page's big title, a gray line under it, and an optional button on the right.
-export default function PageHeader({
-  title,
-  subtitle,
-  children,
-}: {
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  children?: React.ReactNode;
-}) {
+// A page's big title, with an optional button on the right.
+export default function PageHeader({ title, children }: { title: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <header className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className={pageTitle}>{title}</h1>
-        {subtitle && <p className="mt-0.5 text-[15px] text-muted">{subtitle}</p>}
-      </div>
+    <header className="flex items-center justify-between gap-3">
+      <h1 className={`${pageTitle} min-w-0`}>{title}</h1>
       {children}
     </header>
   );

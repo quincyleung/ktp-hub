@@ -32,6 +32,13 @@ export const CalendarIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const CalendarPlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 11V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7" />
+    <path d="M3 10h18M8 3v4M16 3v4M18 15v6M15 18h6" />
+  </Icon>
+);
+
 export const BellIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "People · KTP Hub" };
 export default function PeoplePage() {
   return (
     <PageSuspense label="Loading the directory">
-      <PageHeader title="People" subtitle="Discover who's in the chapter" />
+      <PageHeader title="People" />
       <PeopleContent />
     </PageSuspense>
   );

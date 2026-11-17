@@ -8,7 +8,7 @@ export type ActionResult = { ok: true } | { ok: false; error: string; gone?: boo
 
 const WELCOME = {
   title: "You're all set",
-  body: "You'll get a notification here when the board posts an event or announcement.",
+  body: "You'll get a notification here when the board posts an announcement.",
   url: "/",
 };
 
@@ -59,6 +59,25 @@ export async function saveDevice(input: unknown, welcome: boolean): Promise<Acti
     console.error("saveDevice failed:", err);
     return { ok: false, error: "The server couldn't save this device. Try again." };
   }
+}
+
+// Turns notifications off for one of the signed-in person's own devices.
+export async function forgetDevice(endpoint: unknown): Promise<ActionResult> {
+  const viewer = await getViewer();
+  if (!viewer) return { ok: false, error: "Sign in first." };
+  if (typeof endpoint !== "string" || !endpoint.startsWith("https://")) {
+    return { ok: false, error: "This device's notification setup doesn't look valid." };
+  }
+  const { error } = await db()
+    .from("push_subscriptions")
+    .delete()
+    .eq("endpoint", endpoint)
+    .eq("user_id", viewer.userId);
+  if (error) {
+    console.error("forgetDevice failed:", error.message);
+    return { ok: false, error: "Notifications couldn't be turned off. Try again." };
+  }
+  return { ok: true };
 }
 
 // Sends a test notification to one of the signed-in person's own devices.

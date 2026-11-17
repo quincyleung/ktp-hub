@@ -54,7 +54,6 @@ async function HomeContent() {
           {BADGE[viewer.type]}
         </span>
       </div>
-      <p className="mt-0.5 text-[15px] text-muted">Here&apos;s what&apos;s happening in KTP.</p>
       {viewer.role === "guest" && (
         <div className="mt-2 space-y-2">
           <p>

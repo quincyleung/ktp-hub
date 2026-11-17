@@ -6,6 +6,7 @@ import { ChevronRight, MegaphoneIcon, PlusIcon } from "./icons";
 import { sectionTitle, tappable } from "./ui";
 
 const SHOW_ANNOUNCEMENTS = 3;
+const SHOW_EVENTS = 3;
 
 function AnnouncementCard({ post, now }: { post: Post; now: Date }) {
   return (
@@ -41,8 +42,8 @@ function AddButton({ href, label }: { href: string; label: string }) {
   );
 }
 
-// Home: announcements first, then what's coming up (board posts and the
-// chapter's Google Calendar). Board members get + buttons to post.
+// Home: announcements first, then the next few events (from the chapter's
+// Google Calendar). Board members get a + button to post an announcement.
 export default async function HomeFeed({ isBoard }: { isBoard: boolean }) {
   const { now, upcoming, announcements, failed } = await getHomeFeed();
   const recent = announcements.slice(0, SHOW_ANNOUNCEMENTS);
@@ -61,7 +62,7 @@ export default async function HomeFeed({ isBoard }: { isBoard: boolean }) {
           <h2 id="announcements-heading" className={sectionTitle}>
             Announcements
           </h2>
-          {isBoard && <AddButton href="/new?kind=announcement" label="Post an announcement" />}
+          {isBoard && <AddButton href="/new" label="Post an announcement" />}
         </div>
         {announcements.length === 0 ? (
           <p className="mt-2 text-muted">No announcements yet.</p>
@@ -96,18 +97,15 @@ export default async function HomeFeed({ isBoard }: { isBoard: boolean }) {
           <h2 id="upcoming-heading" className={sectionTitle}>
             Coming up
           </h2>
-          <div className="flex items-center gap-3">
-            <Link href="/calendar" className="text-[15px] font-semibold text-accent">
-              Full calendar
-            </Link>
-            {isBoard && <AddButton href="/new?kind=event" label="Post an event" />}
-          </div>
+          <Link href="/calendar" className="text-[15px] font-semibold text-accent">
+            Full calendar
+          </Link>
         </div>
         {upcoming.length === 0 ? (
           <p className="mt-2 text-muted">Nothing on the calendar for the next month.</p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {upcoming.map((item) => (
+            {upcoming.slice(0, SHOW_EVENTS).map((item) => (
               <li key={item.key}>
                 <EventCard item={item} now={now} />
               </li>

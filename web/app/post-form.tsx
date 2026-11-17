@@ -7,30 +7,21 @@ import { createPost, type PostResult } from "./post-actions";
 import { Spinner } from "./spinner";
 import { card, field, primaryButton, secondaryButton } from "./ui";
 
-export type Kind = "event" | "announcement";
-
-
-// The board's form for a new event or announcement (the + buttons on Home).
-export default function PostForm({ initialKind }: { initialKind: Kind }) {
+// The board's form for a new announcement (the + button on Home).
+// Events go on the chapter's Google Calendar instead.
+export default function PostForm() {
   const router = useRouter();
-  const [kind, setKind] = useState<Kind>(initialKind);
   const [result, setResult] = useState<PostResult | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    // The time picker gives local time with no time zone; send it as an exact instant.
-    const local = String(data.get("starts_local") ?? "");
-    if (local) data.set("starts_at", new Date(local).toISOString());
-    data.delete("starts_local");
-
     setResult(null);
     startTransition(async () => {
       setResult(await createPost(data));
     });
   }
-
   if (result?.ok) {
     return (
       <section className={`${card} mt-4`}>
@@ -49,30 +40,9 @@ export default function PostForm({ initialKind }: { initialKind: Kind }) {
 
   return (
     <form onSubmit={onSubmit} className="mt-4 space-y-4">
-      <div
-        role="radiogroup"
-        aria-label="Type of post"
-        className="grid grid-cols-2 gap-1 rounded-xl bg-surface p-1"
-      >
-        {(["event", "announcement"] as const).map((k) => (
-          <label
-            key={k}
-            className={`flex h-10 cursor-pointer items-center justify-center rounded-lg font-semibold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ${
-              kind === k ? "bg-navy text-white" : "text-muted"
-            }`}
-          >
-            <input
-              type="radio"
-              name="kind"
-              value={k}
-              checked={kind === k}
-              onChange={() => setKind(k)}
-              className="sr-only"
-            />
-            {k === "event" ? "Event" : "Announcement"}
-          </label>
-        ))}
-      </div>
+      <p className="text-[15px] text-muted">
+        Adding an event? Put it on the chapter&apos;s Google Calendar. It shows up in the app on its own.
+      </p>
 
       <label className="block">
         <span className="font-semibold">Title</span>
@@ -81,22 +51,9 @@ export default function PostForm({ initialKind }: { initialKind: Kind }) {
           required
           maxLength={120}
           className={`mt-1 ${field}`}
-          placeholder={kind === "event" ? "e.g. Resume and LinkedIn reviews" : "e.g. Dues are due Friday"}
+          placeholder="e.g. Dues are due Friday"
         />
       </label>
-
-      {kind === "event" && (
-        <>
-          <label className="block">
-            <span className="font-semibold">When</span>
-            <input name="starts_local" type="datetime-local" required className={`mt-1 ${field} appearance-none`} />
-          </label>
-          <label className="block">
-            <span className="font-semibold">Where</span> <span className="text-muted">(optional)</span>
-            <input name="location" maxLength={200} className={`mt-1 ${field}`} placeholder="e.g. Harper 148" />
-          </label>
-        </>
-      )}
 
       <label className="block">
         <span className="font-semibold">Details</span> <span className="text-muted">(optional)</span>
@@ -132,8 +89,6 @@ export default function PostForm({ initialKind }: { initialKind: Kind }) {
             <>
               <Spinner /> Posting…
             </>
-          ) : kind === "event" ? (
-            "Post event"
           ) : (
             "Post announcement"
           )}

@@ -3,51 +3,35 @@
 import { refresh } from "next/cache";
 import { notifyChapter, UUID } from "@/lib/posts";
 import { db } from "@/lib/supabase";
-import { fullDateTime } from "@/lib/time";
 import { getViewer } from "@/lib/viewer";
 
 export type PostResult = { ok: true; message: string } | { ok: false; error: string };
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
 
-// Board only: posts an event or announcement to the chapter and, unless
-// "Notify everyone" is unchecked, sends a notification to every member's phone.
+// Board only: posts an announcement to the chapter and, unless "Notify
+// everyone" is unchecked, sends a notification to every member's phone.
+// Events aren't posted here: the board adds them to the chapter's Google
+// Calendar, and the app shows them from there.
 export async function createPost(form: FormData): Promise<PostResult> {
   const viewer = await getViewer();
   if (!viewer || viewer.role !== "board") return { ok: false, error: "Only board members can post." };
 
-  const kind = form.get("kind") === "announcement" ? "announcement" : "event";
   const title = text(form, "title");
   const body = text(form, "body");
-  const location = kind === "event" ? text(form, "location") : "";
   const notify = form.get("notify") === "on";
 
   if (!title) return { ok: false, error: "Add a title." };
   if (title.length > 120) return { ok: false, error: "Keep the title under 120 characters." };
   if (body.length > 2000) return { ok: false, error: "Keep the details under 2,000 characters." };
-  if (location.length > 200) return { ok: false, error: "Keep the location under 200 characters." };
-
-  let startsAt: Date | null = null;
-  if (kind === "event") {
-    const raw = text(form, "starts_at");
-    startsAt = raw ? new Date(raw) : null;
-    if (!startsAt || Number.isNaN(startsAt.getTime())) {
-      return { ok: false, error: "Pick a date and time for the event." };
-    }
-    if (startsAt.getTime() < Date.now() - 60 * 60 * 1000) {
-      return { ok: false, error: "That time has already passed. Check the date and AM/PM." };
-    }
-  }
 
   const { data, error } = await db()
     .from("posts")
     .insert({
       audience: "chapter",
-      kind,
+      kind: "announcement",
       title,
       body: body || null,
-      starts_at: startsAt?.toISOString() ?? null,
-      location: location || null,
       notify,
       created_by: viewer.name,
       author_email: viewer.email,
@@ -62,17 +46,11 @@ export async function createPost(form: FormData): Promise<PostResult> {
   let message = "Posted without a notification.";
   if (notify) {
     const url = `/posts/${data.id}`;
-    const payload = startsAt
-      ? {
-          title: `New event: ${title}`,
-          body: [fullDateTime(startsAt), location].filter(Boolean).join(" · "),
-          url,
-        }
-      : {
-          title,
-          body: body ? (body.length > 140 ? `${body.slice(0, 139)}…` : body) : "New announcement from the board",
-          url,
-        };
+    const payload = {
+      title,
+      body: body ? (body.length > 140 ? `${body.slice(0, 139)}…` : body) : "New announcement from the board",
+      url,
+    };
     try {
       const { people, failed } = await notifyChapter(payload);
       message =

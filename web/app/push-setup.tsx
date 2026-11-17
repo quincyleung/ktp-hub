@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { saveDevice, sendTestToMe } from "./actions";
+import { forgetDevice, saveDevice, sendTestToMe } from "./actions";
 import { useDevice } from "./device";
 import { InAppBrowserNote, InstallSteps } from "./install-steps";
 import { Spinner } from "./spinner";
 import { card, primaryButton, sectionTitle } from "./ui";
 
-type Status = "checking" | "unsupported" | "ready" | "blocked" | "on";
+export type Status = "checking" | "unsupported" | "ready" | "blocked" | "on";
 
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
@@ -49,29 +49,13 @@ async function checkPushStatus(): Promise<Status> {
   }
 }
 
-// Where it's shown:
-// - "home": a card that only shows until notifications are on (new people start here).
-// - "banner": the bell page, just a "Turn on notifications" button while they're off.
-// - "settings": the full card, with "Send a test" and the device check.
-type Mode = "home" | "banner" | "settings";
-
-// Home and the bell page only learn whether to show this after a quick check on
-// the phone, so it slides open instead of shoving the posts down all at once.
-// The inner padding keeps the button's focus outline from being clipped.
-function SlideOpen({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid animate-expand motion-reduce:animate-none">
-      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
-    </div>
-  );
-}
-
-export default function PushSetup({ guest = false, mode = "home" }: { guest?: boolean; mode?: Mode }) {
+/** This phone's notification state, plus turning them on and off and sending a test. */
+export function usePush() {
   const device = useDevice();
   const canPush = !!device && !device.isInApp && !(device.isIOS && !device.isStandalone);
 
   const [status, setStatus] = useState<Status>("checking");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"on" | "off" | "test" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +71,7 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
   }, [canPush]);
 
   async function turnOn() {
-    setBusy(true);
+    setBusy("on");
     setError(null);
     setMessage(null);
     try {
@@ -112,12 +96,33 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  // Stops notifications on this phone: the server forgets it, and so does the browser.
+  async function turnOff() {
+    setBusy("off");
+    setError(null);
+    setMessage(null);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const result = await forgetDevice(sub.endpoint);
+        if (!result.ok) throw new Error(result.error);
+        await sub.unsubscribe();
+      }
+      setStatus("ready");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
     }
   }
 
   async function sendTest() {
-    setBusy(true);
+    setBusy("test");
     setError(null);
     setMessage(null);
     try {
@@ -131,7 +136,7 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
       if (!result.ok && result.gone) {
         await sub.unsubscribe();
         setStatus("ready");
-        setMessage("Notifications were reset on this device. Tap Turn on notifications again.");
+        setMessage("Notifications were reset on this phone. Turn them on again.");
         return;
       }
       if (!result.ok) throw new Error(result.error);
@@ -139,18 +144,16 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  // On Home and the bell page, stay out of the way while checking and once
-  // it's on, but keep showing the confirmation right after someone turns it on.
-  const quietlyOn = status === "on" && !message && !error;
-  if (mode !== "settings" && (!device || (canPush && (status === "checking" || quietlyOn)))) {
-    return null;
-  }
+  return { device, canPush, status, busy, message, error, turnOn, turnOff, sendTest };
+}
 
-  const feedback = (
+/** The message or error after turning notifications on or sending a test. */
+export function PushFeedback({ message, error }: { message: string | null; error: string | null }) {
+  return (
     <>
       {message && (
         <p role="status" className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
@@ -158,33 +161,85 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
         </p>
       )}
       {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[15px] text-red-700 dark:text-red-300"
-        >
+        <p role="alert" className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[15px] text-red-700 dark:text-red-300">
           {error}
         </p>
       )}
     </>
   );
+}
+
+// Where it's shown (Settings has its own switch, in notification-settings.tsx):
+// - "home": a card that only shows until notifications are on (new people start here).
+// - "banner": the bell page, just a "Turn on notifications" button while they're off.
+type Mode = "home" | "banner";
+
+// Home and the bell page only learn whether to show this after a quick check on
+// the phone, so it slides open instead of shoving the posts down all at once.
+// The inner padding keeps the button's focus outline from being clipped.
+function SlideOpen({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid animate-expand motion-reduce:animate-none">
+      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
+    </div>
+  );
+}
+
+function TurnOnButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={primaryButton} onClick={onClick} disabled={busy}>
+      {busy ? (
+        <>
+          <Spinner /> Turning on…
+        </>
+      ) : (
+        "Turn on notifications"
+      )}
+    </button>
+  );
+}
+
+export function UnsupportedNote() {
+  return (
+    <p className="mt-2">
+      This browser can&apos;t get notifications. On iPhone, update to iOS 16.4 or later. On Android,
+      use Chrome.
+    </p>
+  );
+}
+
+export function BlockedNote() {
+  return (
+    <div className="mt-2 space-y-3">
+      <p>Notifications are blocked for KTP Hub.</p>
+      <p>
+        <b>iPhone:</b> Settings → Notifications → KTP Hub → turn on Allow Notifications. Then close and
+        reopen KTP Hub.
+      </p>
+      <p>
+        <b>Android:</b> tap the icon left of the address, and allow notifications.
+      </p>
+    </div>
+  );
+}
+
+export default function PushSetup({ guest = false, mode = "home" }: { guest?: boolean; mode?: Mode }) {
+  const { device, canPush, status, busy, message, error, turnOn, sendTest } = usePush();
+
+  // Stay out of the way while checking and once it's on, but keep showing
+  // the confirmation right after someone turns it on.
+  const quietlyOn = status === "on" && !message && !error;
+  if (!device || (canPush && (status === "checking" || quietlyOn))) return null;
+
+  const feedback = <PushFeedback message={message} error={error} />;
 
   if (mode === "banner") {
     if (canPush && (status === "ready" || status === "on")) {
       return (
         <SlideOpen>
           <div className="mt-2">
-          {status === "ready" && (
-            <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
-              {busy ? (
-                <>
-                  <Spinner /> Turning on…
-                </>
-              ) : (
-                "Turn on notifications"
-              )}
-            </button>
-          )}
-          {feedback}
+            {status === "ready" && <TurnOnButton busy={busy === "on"} onClick={turnOn} />}
+            {feedback}
           </div>
         </SlideOpen>
       );
@@ -202,46 +257,26 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
   }
 
   let body: React.ReactNode;
-  const checking = !device || (canPush && status === "checking");
-  if (checking) {
-    // Takes a split second. Hold the space quietly instead of flashing a spinner.
-    body = <div className="mt-2 h-10" aria-hidden="true" />;
-  } else if (device.isInApp) {
+  if (device.isInApp) {
     body = <InAppBrowserNote />;
   } else if (device.isIOS && !device.isStandalone) {
     body = <InstallSteps />;
   } else if (status === "unsupported") {
-    body = (
-      <p className="mt-2">
-        This browser can&apos;t get notifications. On iPhone, update to iOS 16.4 or later. On
-        Android, use Chrome.
-      </p>
-    );
+    body = <UnsupportedNote />;
   } else if (status === "blocked") {
-    body = (
-      <div className="mt-2 space-y-3">
-        <p>Notifications are blocked for KTP Hub.</p>
-        <p>
-          <b>iPhone:</b> Settings → Notifications → KTP Hub → turn on Allow Notifications. Then
-          close and reopen KTP Hub.
-        </p>
-        <p>
-          <b>Android:</b> tap the icon left of the address, and allow notifications.
-        </p>
-      </div>
-    );
+    body = <BlockedNote />;
   } else if (status === "on") {
-    // Compact once it's on, so the posts stay near the top.
+    // Right after turning them on: a confirmation and a test button.
     body = (
       <div className="mt-2 flex items-center justify-between gap-3">
-        <p className="font-semibold">On for this device ✓</p>
+        <p className="font-semibold">On for this phone ✓</p>
         <button
           type="button"
           className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-line bg-background px-4 text-[15px] font-semibold transition active:opacity-80 disabled:opacity-60"
           onClick={sendTest}
-          disabled={busy}
+          disabled={busy !== null}
         >
-          {busy ? (
+          {busy === "test" ? (
             <>
               <Spinner className="h-4 w-4" /> Sending…
             </>
@@ -257,37 +292,21 @@ export default function PushSetup({ guest = false, mode = "home" }: { guest?: bo
         <p>
           {guest
             ? "Members get a notification when the board posts. As a guest, you can turn them on to try a test one."
-            : "Get a notification when the board posts an event or announcement."}
+            : "Get a notification when the board posts an announcement."}
         </p>
-        <button type="button" className={primaryButton} onClick={turnOn} disabled={busy}>
-          {busy ? (
-                <>
-                  <Spinner /> Turning on…
-                </>
-              ) : (
-                "Turn on notifications"
-              )}
-        </button>
+        <TurnOnButton busy={busy === "on"} onClick={turnOn} />
         <p className="mt-2 text-sm text-muted">Your phone will ask for permission. Tap Allow.</p>
       </div>
     );
   }
 
-  const section = (
-    <section className={`${card} ${mode === "home" ? "mt-6" : ""}`}>
-      {mode === "home" && <h2 className={sectionTitle}>Notifications</h2>}
-      {/* Fades in once the check is done (Settings shows the card while checking). */}
-      <div key={checking ? "checking" : "ready"} className="animate-fade-in motion-reduce:animate-none">
+  return (
+    <SlideOpen>
+      <section className={`${card} mt-6`}>
+        <h2 className={sectionTitle}>Notifications</h2>
         {body}
-      </div>
-      {feedback}
-      {mode === "settings" && !checking && device && (
-        <p className="mt-5 text-xs text-muted">
-          Device check: {device.isIOS ? "iPhone/iPad" : "not iPhone"} ·{" "}
-          {device.isStandalone ? "home screen" : "browser"} · {status}
-        </p>
-      )}
-    </section>
+        {feedback}
+      </section>
+    </SlideOpen>
   );
-  return mode === "home" ? <SlideOpen>{section}</SlideOpen> : section;
 }

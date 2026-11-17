@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSoonEvents, getUpdates, type Update } from "@/lib/posts";
+import { getReminders, getUpdates, type Reminder, type Update } from "@/lib/posts";
 import { BADGE } from "@/lib/roles";
 import { clockTime, dayLabel, fullDateTime, timeAgo } from "@/lib/time";
 import { getViewer } from "@/lib/viewer";
 import Avatar from "../../avatar";
 import { MarkNotificationsSeen } from "../../bell";
-import { SettingsIcon } from "../../icons";
+import { ChevronRight, ClockIcon, SettingsIcon } from "../../icons";
 import LikeButton from "../../like-button";
 import PageHeader from "../../page-header";
 import PushSetup from "../../push-setup";
@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Notifications · KTP Hub" };
 export default function NotificationsPage() {
   return (
     <PageSuspense label="Loading posts">
-      <PageHeader title="Notifications" subtitle="Posts from the board">
+      <PageHeader title="Notifications">
         <Link
           href="/settings"
           aria-label="Settings"
@@ -80,74 +80,71 @@ function UpdateCard({ update, now, canSeePeople }: { update: Update; now: Date; 
   );
 }
 
+// A reminder sits in the feed like a post: "Tomorrow at 8:00 PM" a day ahead,
+// "Starts in 45 minutes" in the last hour. Tapping it opens the event.
+function ReminderCard({ reminder, now }: { reminder: Reminder; now: Date }) {
+  const { event } = reminder;
+  const start = new Date(event.start);
+  const minutes = Math.max(1, Math.round((start.getTime() - now.getTime()) / 60000));
+  const when =
+    reminder.lead === "hour"
+      ? `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`
+      : `${dayLabel(event.day, now)} at ${clockTime(start)}`;
+  const href = event.postId ? `/posts/${event.postId}` : `/calendar?day=${event.day}`;
+
+  return (
+    <li>
+      <Link href={href} className="flex items-start gap-3 rounded-2xl bg-surface p-4 transition active:opacity-80">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-white">
+          <ClockIcon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm text-muted">Reminder · {timeAgo(new Date(reminder.at), now)}</span>
+          <span className="mt-0.5 block text-lg font-bold leading-snug tracking-tight">{event.title}</span>
+          <span className="block text-[15px] font-semibold text-accent">
+            {when}
+            {event.location && <> · {event.location}</>}
+          </span>
+        </span>
+        <ChevronRight className="mt-2.5 h-5 w-5 shrink-0 text-muted" />
+      </Link>
+    </li>
+  );
+}
+
 async function NotificationsContent() {
   const viewer = await getViewer();
   if (!viewer) redirect("/");
-  const [{ now, updates, failed }, soon] = await Promise.all([getUpdates(viewer.userId), getSoonEvents()]);
-  const latest = updates[0] ? Date.parse(updates[0].created_at) : null;
+  const [{ now, updates, failed }, { reminders }] = await Promise.all([getUpdates(viewer.userId), getReminders()]);
+
+  // One feed, newest first: board posts and event reminders together.
+  const feed = [
+    ...updates.map((u) => ({ at: Date.parse(u.created_at), key: u.id, update: u })),
+    ...reminders.map((r) => ({ at: r.at, key: r.key, reminder: r })),
+  ].sort((a, b) => b.at - a.at);
+  const latest = feed[0]?.at ?? null;
 
   return (
     <>
       <PushSetup guest={viewer.role === "guest"} mode="banner" />
       <MarkNotificationsSeen latest={latest} />
 
-      {soon.length > 0 && (
-        <section className="mt-6" aria-labelledby="reminders-heading">
-          <h2 id="reminders-heading" className="text-sm font-bold uppercase tracking-wide text-muted">
-            Reminders
-          </h2>
-          <ul className="mt-2 space-y-2">
-            {soon.map((e) => {
-              const row = (
-                <>
-                  <span className="shrink-0 rounded-full bg-navy px-2 py-0.5 text-xs font-bold text-white">
-                    {dayLabel(e.day, now)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    <b>{e.title}</b>
-                    <span className="text-muted">
-                      {" "}
-                      · {e.allDay ? "All day" : clockTime(new Date(e.start))}
-                      {e.location && ` · ${e.location}`}
-                    </span>
-                  </span>
-                </>
-              );
-              return (
-                <li key={e.key}>
-                  {e.postId ? (
-                    <Link
-                      href={`/posts/${e.postId}`}
-                      className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 transition active:opacity-80"
-                    >
-                      {row}
-                    </Link>
-                  ) : (
-                    <Link
-                      href="/calendar"
-                      className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 transition active:opacity-80"
-                    >
-                      {row}
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {failed ? (
+      {failed && (
         <p role="alert" className="mt-6 rounded-lg bg-red-500/10 px-3 py-2 text-red-700 dark:text-red-300">
           Posts couldn&apos;t load. Close and reopen the app to try again.
         </p>
-      ) : updates.length === 0 ? (
-        <p className="mt-6 text-muted">Nothing from the board yet.</p>
+      )}
+      {feed.length === 0 && !failed ? (
+        <p className="mt-6 text-muted">Nothing yet. Board announcements and event reminders show up here.</p>
       ) : (
         <ul className="mt-6 space-y-3">
-          {updates.map((u) => (
-            <UpdateCard key={u.id} update={u} now={now} canSeePeople={viewer.role !== "guest"} />
-          ))}
+          {feed.map((item) =>
+            "update" in item && item.update ? (
+              <UpdateCard key={item.key} update={item.update} now={now} canSeePeople={viewer.role !== "guest"} />
+            ) : "reminder" in item && item.reminder ? (
+              <ReminderCard key={item.key} reminder={item.reminder} now={now} />
+            ) : null,
+          )}
         </ul>
       )}
     </>
