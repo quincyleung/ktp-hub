@@ -9,6 +9,21 @@ the chapter directory.
 
 v2 is due at the project fair on December 1.
 
+## What I saw when a brother used v1
+
+I tested v1 with one brother who is also on the board, on an iPhone, using Chrome. They completed the core task from start
+to finish: signed up, added the app to their home screen, turned on notifications, and got a
+notification. They thought it was intuitive, and they liked the features and the notifications.
+
+They asked for three more things:
+
+- Being able to track if people paid dues (dues are also a requirement).
+- Being able to sign up for events and committees, and say if you're going.
+- For the board: seeing the budget, requesting funding, and submitting purchase receipts.
+
+Nothing in the core task needed fixing, so v2 is mostly about adding features: the ones my tester
+asked for, plus the ones I already wanted.
+
 ## How I'll know v2 worked
 
 People are using the app frequently, we have higher attendance, and our info is more up to date.
@@ -34,11 +49,13 @@ What a brother sees:
 
 - **This quarter:** points so far, by requirement (chapter, dues, committee, service and fundraising,
   membership and rush, social), and what's left to reach 100.
+- **Dues:** whether you've paid. Dues are a requirement too, and my tester asked to be able to
+  track them. The board marks who has paid, and everyone sees their own status.
 - **Leaderboard:** who has the most points this quarter.
 - **Earlier quarters:** points from past quarters this year.
 - **Check in:** scan the QR code at a committee, event, or chapter meeting.
 
-The board will still enter points that don't come from a check-in, like dues.
+The board will still enter points that don't come from a check-in.
 
 Questions to settle before building it:
 
@@ -48,10 +65,10 @@ Questions to settle before building it:
 - Should the leaderboard show everyone or only the top 10?
 - How do we bring this year's earlier quarters in from the sheet?
 
-### 2. Who's going to events (RSVP)
+### 2. Signing up for events and committees (RSVP)
 
-Brothers can tap "Going" on an event and see who else is going. Members asked for this in the
-survey.
+Brothers can sign up for events and committees, say if they're going, and see who else is going.
+Members asked for this in the survey, and my tester asked for it too.
 
 ### 3. A page of important files and links
 
@@ -68,12 +85,17 @@ find everyone studying economics, or everyone graduating in 2028.
 Right now, notifications can only be turned on in Settings. New brothers should be asked once while
 they set up their profile, so they don't miss it.
 
+### 6. Budget and funding for the board
+
+The board can see the budget, request funding, and submit purchase receipts in the app. My tester,
+who is on the board, asked for this.
+
+Questions to settle before building it:
+
+- Who approves a funding request, and how do they get notified?
+- Where do the budget numbers and receipts live today, and how do we bring them in?
+
 ## What I'll change
-
-### Clearer wording and pages
-
-The language and the pages could look better and be more intuitive. I'll go through every page
-with testers and rewrite anything that confuses them.
 
 ### Close the app to guests again
 
@@ -90,8 +112,10 @@ need to reinstall the app and turn notifications on again.
 
 ### More testing
 
-Test the full member path (sign in, install, turn on notifications, get a post) on both iPhone and
-Android with the 13 brothers who volunteered in the survey.
+I've only tested with one brother, who is on the board, on an iPhone. Next, I'll test the full
+member path (sign in,
+install, turn on notifications, get a post) on both iPhone and Android with the 13 brothers who
+volunteered in the survey.
 
 ## Smaller fixes
 
@@ -106,7 +130,7 @@ Android with the 13 brothers who volunteered in the survey.
 
 | When | What |
 | --- | --- |
-| Nov 17–24 | Test v1 with the board and survey volunteers on iPhone and Android. Fix what they run into. Rewrite confusing wording. |
-| Nov 24–30 (Thanksgiving break) | Build Points (QR check-in, my points, leaderboard, earlier quarters), RSVP, the files and links page, People filters, and the notification step in sign-up. |
+| Nov 17–24 | Test v1 with the board and survey volunteers on iPhone and Android. Fix anything they run into. |
+| Nov 24–30 (Thanksgiving break) | Build Points (QR check-in, dues, my points, leaderboard, earlier quarters), sign-ups and RSVP, the files and links page, People filters, the notification step in sign-up, and the board's budget and funding requests. |
 | Dec 1 | Project fair: v2. |
 | After the course | Close the app to guests. Hand it over to the chapter's accounts. |
