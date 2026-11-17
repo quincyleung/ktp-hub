@@ -87,3 +87,11 @@ export function timeAgo(then: Date, now: Date) {
   if (sameDay(then, new Date(now.getTime() - DAY))) return "yesterday";
   return monthDayFmt.format(then);
 }
+
+/** How long until something starts: "45 minutes", "1 hour", "9 hours". */
+export function timeUntil(start: Date, now: Date) {
+  const minutes = Math.max(1, Math.round((start.getTime() - now.getTime()) / 60000));
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  const hours = Math.round(minutes / 60);
+  return `${hours} hour${hours === 1 ? "" : "s"}`;
+}

@@ -32,7 +32,7 @@ async function SettingsContent() {
         <h2 id="notifications-heading" className={sectionHeading}>
           Notifications
         </h2>
-        <NotificationSettings guest={viewer.role === "guest"} />
+        <NotificationSettings />
       </section>
 
       <section className="mt-8" aria-labelledby="account-heading">
@@ -48,11 +48,6 @@ async function SettingsContent() {
           </li>
         </ul>
       </section>
-
-      <p className="mt-8 px-1 text-sm text-muted">
-        Only chapter members can see People and profiles. Likes show as a count, so no one can see
-        who liked a post.
-      </p>
     </>
   );
 }

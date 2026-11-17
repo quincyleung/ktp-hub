@@ -2,7 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // The home page is public: on iPhone, people install the app before signing in.
 // The page itself checks who's signed in, and so does every server action.
-const isPublic = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
+// /api/reminders is called by a timer, not a person; it checks its own secret.
+const isPublic = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/api/reminders"]);
 
 export default clerkMiddleware(
   async (auth, req) => {

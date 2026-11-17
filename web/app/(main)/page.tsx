@@ -3,7 +3,6 @@ import { BADGE } from "@/lib/roles";
 import { getViewer } from "@/lib/viewer";
 import HomeFeed from "../feed";
 import { BrandMark } from "../page-header";
-import PushSetup from "../push-setup";
 import SignedOut from "../signed-out";
 import { PageSuspense } from "../spinner";
 import { pageTitle } from "../ui";
@@ -54,19 +53,6 @@ async function HomeContent() {
           {BADGE[viewer.type]}
         </span>
       </div>
-      {viewer.role === "guest" && (
-        <div className="mt-2 space-y-2">
-          <p>
-            You can see the chapter&apos;s events and announcements, but notifications for new posts
-            go to members only.
-          </p>
-          <p className="text-[15px] text-muted">
-            In the chapter? Sign out (tap the circle at the top right) and sign in with the email
-            on the roster.
-          </p>
-        </div>
-      )}
-      <PushSetup guest={viewer.role === "guest"} />
       <HomeFeed isBoard={viewer.role === "board"} />
     </>
   );

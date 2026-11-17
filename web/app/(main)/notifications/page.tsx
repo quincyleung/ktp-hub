@@ -3,14 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getReminders, getUpdates, type Reminder, type Update } from "@/lib/posts";
 import { BADGE } from "@/lib/roles";
-import { clockTime, dayLabel, fullDateTime, timeAgo } from "@/lib/time";
+import { fullDateTime, timeAgo, timeUntil } from "@/lib/time";
 import { getViewer } from "@/lib/viewer";
 import Avatar from "../../avatar";
 import { MarkNotificationsSeen } from "../../bell";
 import { ChevronRight, ClockIcon, SettingsIcon } from "../../icons";
 import LikeButton from "../../like-button";
 import PageHeader from "../../page-header";
-import PushSetup from "../../push-setup";
 import { PageSuspense } from "../../spinner";
 
 export const metadata: Metadata = { title: "Notifications · KTP Hub" };
@@ -80,34 +79,37 @@ function UpdateCard({ update, now, canSeePeople }: { update: Update; now: Date; 
   );
 }
 
-// A reminder sits in the feed like a post: "Tomorrow at 8:00 PM" a day ahead,
-// "Starts in 45 minutes" in the last hour. Tapping it opens the event.
+// A reminder sits in the feed like a post, an hour before an event (and goes to
+// phones too): "Algos Committee is happening in 45 minutes". It only opens something when the
+// event has its own page (an event the board posted in the app).
 function ReminderCard({ reminder, now }: { reminder: Reminder; now: Date }) {
   const { event } = reminder;
-  const start = new Date(event.start);
-  const minutes = Math.max(1, Math.round((start.getTime() - now.getTime()) / 60000));
-  const when =
-    reminder.lead === "hour"
-      ? `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`
-      : `${dayLabel(event.day, now)} at ${clockTime(start)}`;
-  const href = event.postId ? `/posts/${event.postId}` : `/calendar?day=${event.day}`;
-
+  const content = (
+    <>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-white">
+        <ClockIcon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm text-muted">Reminder · {timeAgo(new Date(reminder.at), now)}</span>
+        <span className="mt-0.5 block text-lg leading-snug tracking-tight">
+          <b>{event.title}</b> is happening in {timeUntil(new Date(event.start), now)}
+        </span>
+      </span>
+    </>
+  );
   return (
     <li>
-      <Link href={href} className="flex items-start gap-3 rounded-2xl bg-surface p-4 transition active:opacity-80">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-white">
-          <ClockIcon className="h-5 w-5" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm text-muted">Reminder · {timeAgo(new Date(reminder.at), now)}</span>
-          <span className="mt-0.5 block text-lg font-bold leading-snug tracking-tight">{event.title}</span>
-          <span className="block text-[15px] font-semibold text-accent">
-            {when}
-            {event.location && <> · {event.location}</>}
-          </span>
-        </span>
-        <ChevronRight className="mt-2.5 h-5 w-5 shrink-0 text-muted" />
-      </Link>
+      {event.postId ? (
+        <Link
+          href={`/posts/${event.postId}`}
+          className="flex items-start gap-3 rounded-2xl bg-surface p-4 transition active:opacity-80"
+        >
+          {content}
+          <ChevronRight className="mt-2.5 h-5 w-5 shrink-0 text-muted" />
+        </Link>
+      ) : (
+        <div className="flex items-start gap-3 rounded-2xl bg-surface p-4">{content}</div>
+      )}
     </li>
   );
 }
@@ -126,7 +128,6 @@ async function NotificationsContent() {
 
   return (
     <>
-      <PushSetup guest={viewer.role === "guest"} mode="banner" />
       <MarkNotificationsSeen latest={latest} />
 
       {failed && (

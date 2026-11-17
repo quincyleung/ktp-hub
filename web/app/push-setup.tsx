@@ -1,12 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { forgetDevice, saveDevice, sendTestToMe } from "./actions";
+import { forgetDevice, saveDevice, sendTestToMe, setReminders } from "./actions";
 import { useDevice } from "./device";
-import { InAppBrowserNote, InstallSteps } from "./install-steps";
-import { Spinner } from "./spinner";
-import { card, primaryButton, sectionTitle } from "./ui";
 
 export type Status = "checking" | "unsupported" | "ready" | "blocked" | "on";
 
@@ -28,9 +24,9 @@ function subscribeFresh(reg: ServiceWorkerRegistration) {
   });
 }
 
-async function checkPushStatus(): Promise<Status> {
+async function checkPushStatus(): Promise<{ status: Status; reminders?: boolean }> {
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
-    return "unsupported";
+    return { status: "unsupported" };
   }
   try {
     const reg = await navigator.serviceWorker.register("/sw.js", {
@@ -40,12 +36,12 @@ async function checkPushStatus(): Promise<Status> {
     const sub = await reg.pushManager.getSubscription();
     if (sub) {
       // Make sure the server knows this device belongs to whoever is signed in now.
-      await saveDevice(sub.toJSON(), false);
-      return "on";
+      const saved = await saveDevice(sub.toJSON(), false);
+      return { status: "on", reminders: saved.ok ? saved.reminders : true };
     }
-    return Notification.permission === "denied" ? "blocked" : "ready";
+    return { status: Notification.permission === "denied" ? "blocked" : "ready" };
   } catch {
-    return "unsupported";
+    return { status: "unsupported" };
   }
 }
 
@@ -55,7 +51,8 @@ export function usePush() {
   const canPush = !!device && !device.isInApp && !(device.isIOS && !device.isStandalone);
 
   const [status, setStatus] = useState<Status>("checking");
-  const [busy, setBusy] = useState<"on" | "off" | "test" | null>(null);
+  const [busy, setBusy] = useState<"on" | "off" | "test" | "reminders" | null>(null);
+  const [reminders, setRemindersState] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +60,9 @@ export function usePush() {
     if (!canPush) return;
     let cancelled = false;
     checkPushStatus().then((s) => {
-      if (!cancelled) setStatus(s);
+      if (cancelled) return;
+      setStatus(s.status);
+      if (s.reminders !== undefined) setRemindersState(s.reminders);
     });
     return () => {
       cancelled = true;
@@ -91,6 +90,7 @@ export function usePush() {
         result = await saveDevice(sub.toJSON(), true);
       }
       if (!result.ok) throw new Error(result.error);
+      setRemindersState(result.reminders);
       setStatus("on");
       setMessage("Welcome notification sent. It should arrive in a few seconds.");
     } catch (err) {
@@ -115,6 +115,30 @@ export function usePush() {
       }
       setStatus("ready");
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Event reminders on or off for this phone (announcements still come).
+  async function toggleReminders() {
+    const next = !reminders;
+    setBusy("reminders");
+    setError(null);
+    setMessage(null);
+    setRemindersState(next);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        setStatus("ready");
+        return;
+      }
+      const result = await setReminders(sub.endpoint, next);
+      if (!result.ok) throw new Error(result.error);
+    } catch (err) {
+      setRemindersState(!next);
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
       setBusy(null);
@@ -148,7 +172,7 @@ export function usePush() {
     }
   }
 
-  return { device, canPush, status, busy, message, error, turnOn, turnOff, sendTest };
+  return { device, canPush, status, busy, message, error, reminders, turnOn, turnOff, toggleReminders, sendTest };
 }
 
 /** The message or error after turning notifications on or sending a test. */
@@ -166,36 +190,6 @@ export function PushFeedback({ message, error }: { message: string | null; error
         </p>
       )}
     </>
-  );
-}
-
-// Where it's shown (Settings has its own switch, in notification-settings.tsx):
-// - "home": a card that only shows until notifications are on (new people start here).
-// - "banner": the bell page, just a "Turn on notifications" button while they're off.
-type Mode = "home" | "banner";
-
-// Home and the bell page only learn whether to show this after a quick check on
-// the phone, so it slides open instead of shoving the posts down all at once.
-// The inner padding keeps the button's focus outline from being clipped.
-function SlideOpen({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid animate-expand motion-reduce:animate-none">
-      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
-    </div>
-  );
-}
-
-function TurnOnButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
-  return (
-    <button type="button" className={primaryButton} onClick={onClick} disabled={busy}>
-      {busy ? (
-        <>
-          <Spinner /> Turning on…
-        </>
-      ) : (
-        "Turn on notifications"
-      )}
-    </button>
   );
 }
 
@@ -220,93 +214,5 @@ export function BlockedNote() {
         <b>Android:</b> tap the icon left of the address, and allow notifications.
       </p>
     </div>
-  );
-}
-
-export default function PushSetup({ guest = false, mode = "home" }: { guest?: boolean; mode?: Mode }) {
-  const { device, canPush, status, busy, message, error, turnOn, sendTest } = usePush();
-
-  // Stay out of the way while checking and once it's on, but keep showing
-  // the confirmation right after someone turns it on.
-  const quietlyOn = status === "on" && !message && !error;
-  if (!device || (canPush && (status === "checking" || quietlyOn))) return null;
-
-  const feedback = <PushFeedback message={message} error={error} />;
-
-  if (mode === "banner") {
-    if (canPush && (status === "ready" || status === "on")) {
-      return (
-        <SlideOpen>
-          <div className="mt-2">
-            {status === "ready" && <TurnOnButton busy={busy === "on"} onClick={turnOn} />}
-            {feedback}
-          </div>
-        </SlideOpen>
-      );
-    }
-    return (
-      <SlideOpen>
-        <p className="mt-4 rounded-lg bg-accent/10 px-3 py-2 text-[15px]">
-          Notifications aren&apos;t on for this phone.{" "}
-          <Link href="/settings" className="font-semibold text-accent underline underline-offset-2">
-            See how in Settings
-          </Link>
-        </p>
-      </SlideOpen>
-    );
-  }
-
-  let body: React.ReactNode;
-  if (device.isInApp) {
-    body = <InAppBrowserNote />;
-  } else if (device.isIOS && !device.isStandalone) {
-    body = <InstallSteps />;
-  } else if (status === "unsupported") {
-    body = <UnsupportedNote />;
-  } else if (status === "blocked") {
-    body = <BlockedNote />;
-  } else if (status === "on") {
-    // Right after turning them on: a confirmation and a test button.
-    body = (
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <p className="font-semibold">On for this phone ✓</p>
-        <button
-          type="button"
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-line bg-background px-4 text-[15px] font-semibold transition active:opacity-80 disabled:opacity-60"
-          onClick={sendTest}
-          disabled={busy !== null}
-        >
-          {busy === "test" ? (
-            <>
-              <Spinner className="h-4 w-4" /> Sending…
-            </>
-          ) : (
-            "Send a test"
-          )}
-        </button>
-      </div>
-    );
-  } else {
-    body = (
-      <div className="mt-2">
-        <p>
-          {guest
-            ? "Members get a notification when the board posts. As a guest, you can turn them on to try a test one."
-            : "Get a notification when the board posts an announcement."}
-        </p>
-        <TurnOnButton busy={busy === "on"} onClick={turnOn} />
-        <p className="mt-2 text-sm text-muted">Your phone will ask for permission. Tap Allow.</p>
-      </div>
-    );
-  }
-
-  return (
-    <SlideOpen>
-      <section className={`${card} mt-6`}>
-        <h2 className={sectionTitle}>Notifications</h2>
-        {body}
-        {feedback}
-      </section>
-    </SlideOpen>
   );
 }

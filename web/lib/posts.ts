@@ -5,7 +5,7 @@ import { getGoogleEvents } from "./gcal";
 import { getAuthors, type Person } from "./people";
 import { sendPush, type PushPayload } from "./push";
 import { db } from "./supabase";
-import { dayKey } from "./time";
+import { clockTime, dayKey, timeUntil } from "./time";
 
 export type Post = {
   id: string;
@@ -142,12 +142,12 @@ export async function getUpdates(userId: string) {
   return { now, updates, failed: !!error };
 }
 
-/** A reminder in the notifications feed, "posted" a day and an hour before an event. */
-export type Reminder = { key: string; at: number; lead: "day" | "hour"; event: CalendarItem };
+/** A reminder in the notifications feed, "posted" an hour before an event. */
+export type Reminder = { key: string; at: number; event: CalendarItem };
 
 /**
- * Reminders that are out by now: one a day before each event and one an hour
- * before, until the event starts. All-day events don't get them (no start time).
+ * Reminders that are out by now: one an hour before each event, until it
+ * starts. All-day events don't get them (no start time).
  */
 export async function getReminders(): Promise<{ now: Date; reminders: Reminder[] }> {
   const { now, upcoming } = await getHomeFeed();
@@ -155,11 +155,41 @@ export async function getReminders(): Promise<{ now: Date; reminders: Reminder[]
   const reminders: Reminder[] = [];
   for (const event of upcoming) {
     const start = Date.parse(event.start);
-    if (event.allDay || start <= t) continue;
-    if (t >= start - DAY) reminders.push({ key: `${event.key}:day`, at: start - DAY, lead: "day", event });
-    if (t >= start - HOUR) reminders.push({ key: `${event.key}:hour`, at: start - HOUR, lead: "hour", event });
+    if (event.allDay || start <= t || t < start - HOUR) continue;
+    reminders.push({ key: `${event.key}:hour`, at: start - HOUR, event });
   }
   return { now, reminders };
+}
+
+/**
+ * Sends each reminder that's due as a notification, once. A timer in Supabase
+ * calls this every 5 minutes (see /api/reminders), so it arrives 55 to 60
+ * minutes before the event. Phones with Event reminders off don't get it.
+ */
+export async function sendDueReminders() {
+  const { now, reminders } = await getReminders();
+  let sent = 0;
+  for (const { event } of reminders) {
+    // Claim it first, so it goes out once even if two checks overlap.
+    const { data, error } = await db()
+      .from("reminders_sent")
+      .upsert({ event_key: event.key }, { onConflict: "event_key", ignoreDuplicates: true })
+      .select("event_key");
+    if (error) throw new Error(error.message);
+    if (!data?.length) continue;
+
+    const start = new Date(event.start);
+    await notifyChapter(
+      {
+        title: `${event.title} is happening in ${timeUntil(start, now)}`,
+        body: [clockTime(start), event.location].filter(Boolean).join(" · "),
+        url: "/notifications",
+      },
+      "reminders",
+    );
+    sent++;
+  }
+  return sent;
 }
 
 /** When the newest post or reminder went out (ms), for the bell's unread dot. */
@@ -183,9 +213,13 @@ async function inBatches(items: string[], run: (batch: string[]) => PromiseLike<
   for (let i = 0; i < items.length; i += 20) await run(items.slice(i, i + 20));
 }
 
-// Sends one notification to every device that belongs to someone on the roster.
-export async function notifyChapter(payload: PushPayload) {
-  const { data, error } = await db().from("member_subscriptions").select("endpoint, email, p256dh, auth");
+// Sends one notification to every device with notifications on ("reminders":
+// only those with Event reminders on). For the course, guests (like graders)
+// get them too; after it, switch back to "member_subscriptions" (roster members only).
+export async function notifyChapter(payload: PushPayload, kind: "announcement" | "reminders" = "announcement") {
+  let query = db().from("push_subscriptions").select("endpoint, email, p256dh, auth");
+  if (kind === "reminders") query = query.eq("reminders", true);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   const subs = (data ?? []) as { endpoint: string; email: string; p256dh: string; auth: string }[];
 

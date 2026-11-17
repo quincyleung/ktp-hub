@@ -38,9 +38,11 @@ function Switch({
   );
 }
 
-// Settings → Notifications: one switch for this phone, and a test once it's on.
-export default function NotificationSettings({ guest }: { guest: boolean }) {
-  const { device, canPush, status, busy, message, error, turnOn, turnOff, sendTest } = usePush();
+// Settings → Notifications: a switch for this phone; once it's on, a switch for
+// event reminders (board announcements always come) and a test.
+export default function NotificationSettings() {
+  const { device, canPush, status, busy, message, error, reminders, turnOn, turnOff, toggleReminders, sendTest } =
+    usePush();
 
   // Flip the switch right away while it works, so the tap feels instant.
   const on = busy === "on" ? true : busy === "off" ? false : status === "on";
@@ -65,7 +67,7 @@ export default function NotificationSettings({ guest }: { guest: boolean }) {
           <span className="min-w-0">
             <span className="block font-semibold">Push notifications</span>
             <span className="block text-sm text-muted">
-              {guest ? "Guests can try a test notification" : "Board announcements, on this phone"}
+              On this phone
             </span>
           </span>
           <Switch
@@ -75,6 +77,20 @@ export default function NotificationSettings({ guest }: { guest: boolean }) {
             label="Push notifications on this phone"
           />
         </li>
+        {status === "on" && (
+          <li className="flex items-center justify-between gap-4 px-4 py-3">
+            <span className="min-w-0">
+              <span className="block font-semibold">Event reminders</span>
+              <span className="block text-sm text-muted">An hour before each event</span>
+            </span>
+            <Switch
+              checked={reminders}
+              disabled={busy !== null}
+              onChange={toggleReminders}
+              label="Event reminders"
+            />
+          </li>
+        )}
         {status === "on" && (
           <li>
             <button

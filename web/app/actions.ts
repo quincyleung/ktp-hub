@@ -5,16 +5,11 @@ import { db } from "@/lib/supabase";
 import { getViewer } from "@/lib/viewer";
 
 export type ActionResult = { ok: true } | { ok: false; error: string; gone?: boolean };
+export type SaveResult = { ok: true; reminders: boolean } | { ok: false; error: string; gone?: boolean };
 
 const WELCOME = {
   title: "You're all set",
-  body: "You'll get a notification here when the board posts an announcement.",
-  url: "/",
-};
-
-const GUEST_WELCOME = {
-  title: "Notifications work",
-  body: "This is what KTP Hub notifications look like. Board posts notify chapter members only.",
+  body: "You'll get a notification here when the board posts, and an hour before each event.",
   url: "/",
 };
 
@@ -30,7 +25,7 @@ async function forget(endpoint: string) {
 
 // Saves this device for the signed-in person. With welcome=true, also sends
 // the welcome notification (the moment someone taps Allow).
-export async function saveDevice(input: unknown, welcome: boolean): Promise<ActionResult> {
+export async function saveDevice(input: unknown, welcome: boolean): Promise<SaveResult> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: "Sign in first." };
 
@@ -38,18 +33,23 @@ export async function saveDevice(input: unknown, welcome: boolean): Promise<Acti
   if (!sub) return { ok: false, error: "This device's notification setup doesn't look valid." };
 
   try {
-    const { error } = await db().from("push_subscriptions").upsert({
-      endpoint: sub.endpoint,
-      user_id: viewer.userId,
-      email: viewer.email,
-      p256dh: sub.keys.p256dh,
-      auth: sub.keys.auth,
-    });
+    const { data, error } = await db()
+      .from("push_subscriptions")
+      .upsert({
+        endpoint: sub.endpoint,
+        user_id: viewer.userId,
+        email: viewer.email,
+        p256dh: sub.keys.p256dh,
+        auth: sub.keys.auth,
+      })
+      .select("reminders")
+      .single();
     if (error) throw new Error(error.message);
-    if (!welcome) return { ok: true };
+    const reminders = data.reminders !== false;
+    if (!welcome) return { ok: true, reminders };
 
-    const result = await sendPush(sub, viewer.role === "guest" ? GUEST_WELCOME : WELCOME);
-    if (result.ok) return { ok: true };
+    const result = await sendPush(sub, WELCOME);
+    if (result.ok) return { ok: true, reminders };
     if (result.gone) {
       await forget(sub.endpoint);
       return { ok: false, gone: true, error: "This device's notification setup expired." };
@@ -76,6 +76,25 @@ export async function forgetDevice(endpoint: unknown): Promise<ActionResult> {
   if (error) {
     console.error("forgetDevice failed:", error.message);
     return { ok: false, error: "Notifications couldn't be turned off. Try again." };
+  }
+  return { ok: true };
+}
+
+// Turns event reminders on or off for one of the signed-in person's own devices.
+export async function setReminders(endpoint: unknown, on: unknown): Promise<ActionResult> {
+  const viewer = await getViewer();
+  if (!viewer) return { ok: false, error: "Sign in first." };
+  if (typeof endpoint !== "string" || !endpoint.startsWith("https://") || typeof on !== "boolean") {
+    return { ok: false, error: "That didn't look right. Try again." };
+  }
+  const { error } = await db()
+    .from("push_subscriptions")
+    .update({ reminders: on })
+    .eq("endpoint", endpoint)
+    .eq("user_id", viewer.userId);
+  if (error) {
+    console.error("setReminders failed:", error.message);
+    return { ok: false, error: "Event reminders couldn't be changed. Try again." };
   }
   return { ok: true };
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/people";
+import { getSampleProfile } from "@/lib/sample-people";
 import { BADGE } from "@/lib/roles";
 import { getViewer } from "@/lib/viewer";
 import Avatar from "../../../avatar";
@@ -21,11 +22,9 @@ export default function PersonPage({ params }: PageProps<"/people/[id]">) {
 async function ProfileView({ params }: Pick<PageProps<"/people/[id]">, "params">) {
   const viewer = await getViewer();
   if (!viewer) redirect("/");
-  if (viewer.role === "guest") {
-    return <p className="text-muted">Profiles are for chapter members only.</p>;
-  }
   const { id } = await params;
-  const p = await getProfile(id);
+  // Guests only see the sample people; members only see real ones.
+  const p = viewer.role === "guest" ? getSampleProfile(id) : await getProfile(id);
   if (!p) notFound();
 
   const isMe = viewer.memberId === p.id;

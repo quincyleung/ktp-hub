@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getPeople } from "@/lib/people";
+import { SAMPLE_PROFILES } from "@/lib/sample-people";
 import { getViewer } from "@/lib/viewer";
 import PageHeader from "../../page-header";
 import PeopleView from "../../people-view";
@@ -17,15 +18,16 @@ export default function PeoplePage() {
   );
 }
 
-// The roster has members' names and emails, so guests don't see it.
+// The roster has members' names and emails, so guests get made-up sample people instead.
 async function PeopleContent() {
   const viewer = await getViewer();
   if (!viewer) redirect("/");
   if (viewer.role === "guest") {
     return (
-      <p className="mt-2 text-muted">
-        The chapter directory is for members only. Sign in with the email on the roster to see it.
-      </p>
+      <>
+        <p className="mt-1 text-sm text-muted">Sample profiles for guests.</p>
+        <PeopleView people={SAMPLE_PROFILES} isBoard={false} myId={null} />
+      </>
     );
   }
   const { people, failed } = await getPeople();
