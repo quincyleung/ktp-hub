@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTP Hub — v2 Roadmap</title>
+<meta name="description" content="Day-by-day checklist for KTP Hub v2, from Points and QR check-in to the project fair on Dec 1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #234c8b;
+    --sky: #8bb9ff;
+    --ink: #171717;
+    --muted: #525252;
+    --bg: #ffffff;
+    --surface: #f5f7fb;
+    --line: #e2e6ee;
+    --accent: #234c8b;
+    --done: #9097a3;
+    --warn: #a15c00;
+    --serif: Palatino, "Palatino Linotype", "Book Antiqua", "URW Palladio L", serif;
+    --sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef1f6;
+      --muted: #a8b0bf;
+      --bg: #0d1424;
+      --surface: #151f35;
+      --line: #263452;
+      --accent: #8bb9ff;
+      --done: #66708a;
+      --warn: #f0b35a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 var(--sans);
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header */
+  header { background: var(--navy); color: #fff; padding: 36px 0 32px; }
+  .top { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin: 0 0 18px; }
+  .eyebrow { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: #d6e5ff; margin: 0; }
+  .links { display: flex; gap: 14px; flex-wrap: wrap; }
+  header a { color: #d6e5ff; font-size: 15px; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 6vw, 52px);
+    line-height: 1.1;
+    margin: 0 0 14px;
+  }
+  .task { font-size: clamp(18px, 2.4vw, 20px); line-height: 1.45; margin: 0 0 26px; max-width: 680px; }
+  .task b { color: #d6e5ff; font-weight: 600; }
+  .meter-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px 16px;
+    flex-wrap: wrap;
+    font-size: 15px;
+    color: #d6e5ff;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .meter-row strong { color: #fff; }
+  .bar { height: 10px; background: rgba(255, 255, 255, .18); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--sky); border-radius: inherit; transition: width .3s ease; }
+
+  main { padding-bottom: 56px; }
+
+  /* Decisions */
+  .decisions { padding: 32px 0 28px; }
+  .kicker {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  dl {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px 18px;
+  }
+  dl div { display: grid; grid-template-columns: 128px 1fr; gap: 14px; padding: 12px 0; }
+  dl div + div { border-top: 1px solid var(--line); }
+  dt { font-weight: 700; font-size: 15px; padding-top: 1px; }
+  dd { margin: 0; }
+
+  /* Days */
+  .day { padding: 28px 0 10px; border-top: 1px solid var(--line); }
+  .day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .date { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .now {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    letter-spacing: .06em;
+    border-radius: 4px;
+    padding: 1px 7px;
+    background: var(--navy);
+    color: #fff;
+    vertical-align: 1px;
+  }
+  @media (prefers-color-scheme: dark) { .now { background: var(--sky); color: #0d1424; } }
+  .day h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+    margin: 4px 0 4px;
+  }
+  .meta { color: var(--muted); font-size: 15px; margin: 0 0 8px; }
+  .count { font-size: 15px; font-weight: 700; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .count.complete { color: var(--accent); }
+  .count.behind { color: var(--warn); }
+
+  h3.sub {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 16px 0 2px;
+  }
+
+  ul.checks { list-style: none; margin: 0; padding: 0; }
+  ul.checks label {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 9px 0;
+    cursor: pointer;
+  }
+  ul.checks input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 3px 0 0;
+    accent-color: var(--navy);
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { ul.checks input { accent-color: var(--sky); } }
+  ul.checks small { display: block; color: var(--muted); font-size: 15px; line-height: 1.45; margin-top: 2px; }
+  ul.checks input:checked + span,
+  ul.checks input:checked + span small { color: var(--done); text-decoration: line-through; }
+  .gate, .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 0 6px;
+    margin-right: 4px;
+    vertical-align: 1px;
+    text-decoration: none;
+  }
+  .tag { border-color: var(--line); color: var(--muted); }
+  code { font-size: .92em; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+
+  /* Later */
+  details.later { border-top: 1px solid var(--line); padding-top: 24px; margin-top: 18px; }
+  details.later > summary {
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1.2;
+    list-style-position: outside;
+  }
+  details.later > p { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+  details.later .day { border-top: 0; padding-top: 20px; }
+  details.later .day h2 { font-size: 22px; }
+
+  footer { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 16px; color: var(--muted); font-size: 15px; }
+  footer button {
+    font: inherit;
+    font-size: 14px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-left: 6px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    dl div { grid-template-columns: 1fr; gap: 2px; }
+    .day h2 { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <p class="eyebrow">Design, Build, Ship · Project v2</p>
+      <div class="links">
+        <a href="../roadmap/">← v1 roadmap</a>
+        <a href="https://github.com/quincyleung/ktp-hub/blob/main/v2-plan/README.md">v2 plan</a>
+        <a href="https://uchicago-ktphub.vercel.app">Live app</a>
+      </div>
+    </div>
+    <h1>KTP Hub v2 Roadmap</h1>
+    <p class="task"><b>Goal:</b> Make the value obvious. The grader found v1 “quite barren,” so v2 adds what brothers come back for every week: their points, one-tap check-in, richer announcements, RSVPs, and the chapter's files and links.</p>
+    <div class="meter-row">
+      <span id="done"><strong>0</strong> of 0 v2 steps done</span>
+      <span id="due">Project fair Tue Dec 1</span>
+    </div>
+    <div class="bar" role="progressbar" aria-label="v2 progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="fill"></i></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="decisions">
+    <p class="kicker">What we decided · Nov 17–20</p>
+    <dl>
+      <div><dt>Grader feedback</dt><dd>v1 felt “quite barren,” and the value prop wasn't clear. So more features come first, and testing comes after.</dd></div>
+      <div><dt>Points</dt><dd>This quarter only for now. When Winter starts, arrows step back to Autumn. The leaderboard shows the top 10, plus your own place if you're outside it.</dd></div>
+      <div><dt>Requirements</dt><dd>Chapter 20 (5 points a meeting, +5 for a fifth meeting), Dues 20, Committee 20, Service &amp; fundraising 20 (+10 for a second event), Membership &amp; rush 20, Social 20 (+10 for a second). They add up to more than 100, but 100 points is the requirement.</dd></div>
+      <div><dt>Check-in</dt><dd>A round Check in button in the middle of the tabs scans inside the app. The code changes every 30 seconds and only works during the event. The board can remove anyone. No paid services.</dd></div>
+      <div><dt>Committee leads</dt><dd>A new role that can run check-ins for committee meetings. The board turns it on with a switch on the brother's profile in People. Committee meetings are already on the chapter's Google Calendar.</dd></div>
+      <div><dt>Calendar</dt><dd>Opens on the week of the next upcoming event, and past events are left out.</dd></div>
+      <div><dt>Deploys</dt><dd>Vercel now builds from <code>web/</code>, so pushing to <code>main</code> deploys the site. Don't run <code>vercel</code> from inside <code>web/</code> anymore.</dd></div>
+      <div><dt>Announcements</dt><dd>Add polls, photos, and attached documents and links. Proposed: one vote each (changeable), totals shown but not names, up to 4 photos, files up to 10 MB, kept in Supabase Storage (free up to 1 GB).</dd></div>
+      <div><dt>Testing</dt><dd>Check-in gets tried for real in person later, once the chapter meets again.</dd></div>
+    </dl>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-11-20">
+    <div class="day-head">
+      <span class="date">Fri Nov 20</span>
+      <span class="count"></span>
+    </div>
+    <h2>Points and QR check-in</h2>
+    <p class="meta">Plan task 1. Built and tested in the browser today. What's left is finishing it off and trying the camera on a real phone.</p>
+    <h3 class="sub">Done</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="fri-vercel" checked><span>Fix the GitHub → Vercel connection, so commits stop showing a failed build<small>Root Directory set to <code>web</code>; a build from GitHub passed.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-cal" checked><span>Calendar opens on the week of the next event, with past events left out</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-points" checked><span>Points tab: this quarter by requirement, dues paid or not, what's left to 100, top 10, and your history</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-scan" checked><span>Check in: the round button opens the camera inside the app, or brothers type the 6 digits</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-code" checked><span>The board's screen: a QR code that changes every 30 seconds and stops when the event ends<small>Start from today's calendar event or a named one; end early; remove anyone.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-dues" checked><span>“Dues and other points” page for the board: dues switches, and points added by hand</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-lead" checked><span>Committee lead role for running committee check-ins<small>The board turns it on with a switch on each brother's profile.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-chapter5" checked><span>Chapter is 5 points a meeting, with +5 for a fifth meeting; the summary says 100 points are needed</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-guest" checked><span>Guests see sample points and can really try a sample check-in</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-sql" checked><span>Run the Points migration in Supabase</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-test" checked><span>Browser test as a guest and as a board member<small>Found and fixed one bug: the board's Points page broke once any check-in existed.</small></span></label></li>
+    </ul>
+    <h3 class="sub">Still to do</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="fri-cleanup"><span>Run the cleanup SQL that deletes Claude's test board member and test check-in</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-disk" checked><span>Free up disk space on the Mac<small>It filled up at the end of today's session.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-commit"><span>Commit (the Calendar change, then Points and check-in) and push, which deploys</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-iphone"><span><b class="gate">Go/no-go</b> On your iPhone, open KTP Hub from the home screen, tap Check in, and scan a code shown on a second screen<small>The camera inside a home-screen app is the riskiest part, like push was in v1.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-android"><span>Try check-in on Android Chrome too</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-leads"><span>Make the committee leads<small>People → their profile → turn on Committee lead. Works once this is pushed.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="fri-defaults"><span>Confirm the guesses: committee and membership &amp; rush check-ins are worth 5 by default</span></label></li>
+      <li><label><input type="checkbox" data-id="fri-import"><span>Decide whether to bring this quarter's points in from the sheet<small>Otherwise everyone starts at zero. The board can also add them under “Dues and other points.”</small></span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-11-21" data-end="2026-11-22">
+    <div class="day-head">
+      <span class="date">Sat–Sun Nov 21–22</span>
+      <span class="count"></span>
+    </div>
+    <h2>Richer announcements, and a files and links page</h2>
+    <p class="meta">What you asked for today, plus plan task 3. Both use the same file storage.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="ann-decide"><span>OK the defaults for polls, photos, and files (or change them)</span></label></li>
+      <li><label><input type="checkbox" data-id="ann-storage"><span>Set up Supabase Storage, with files only reachable through the app's server<small>Stays on the free tier.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="ann-poll"><span>Polls: the board adds choices to an announcement; brothers vote once, can change their vote, and see the totals</span></label></li>
+      <li><label><input type="checkbox" data-id="ann-photos"><span>Photos: up to 4 per announcement, shrunk on the phone before uploading</span></label></li>
+      <li><label><input type="checkbox" data-id="ann-files"><span>Documents: attach PDFs and other files, up to 10 MB each</span></label></li>
+      <li><label><input type="checkbox" data-id="ann-links"><span>Links: a labeled link button, like “RSVP on Partiful”<small>Links pasted in the text already work.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="files-page"><span>Plan task 3: one page for the documents and links the chapter uses all the time<small>Members asked for this in the survey.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="ann-test"><span>Browser test as a new person and as the board, then fix what comes up</span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-11-23" data-end="2026-11-24">
+    <div class="day-head">
+      <span class="date">Mon–Tue Nov 23–24</span>
+      <span class="count"></span>
+    </div>
+    <h2>RSVP, People filters, and notifications at sign-up</h2>
+    <p class="meta">Plan tasks 2, 4, and 5.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="rsvp"><span>Plan task 2: sign up for events and committees, say if you're going, and see who else is going<small>Members asked in the survey, and the tester asked too. RSVPs attach to the Google Calendar event, like check-ins do.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="filters"><span>Plan task 4: filter People by major or graduation year<small>For example, everyone studying economics, or everyone graduating in 2028.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="onboard-push"><span>Plan task 5: ask once to turn on notifications while new brothers set up their profile<small>Right now it's only in Settings.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="mon-test"><span>Browser test as a new person, then fix what comes up</span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-11-25" data-end="2026-11-28">
+    <div class="day-head">
+      <span class="date">Thanksgiving break · Nov 25–28</span>
+      <span class="count"></span>
+    </div>
+    <h2>Budget and funding for the board</h2>
+    <p class="meta">Plan task 6. Asked for by the tester, who is on the board. Answer the two questions before building.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="bud-approve"><span><span class="tag">Decide</span>Who approves a funding request, and how do they find out about it?</span></label></li>
+      <li><label><input type="checkbox" data-id="bud-source"><span><span class="tag">Decide</span>Where do the budget numbers and receipts live today, and how do we bring them in?</span></label></li>
+      <li><label><input type="checkbox" data-id="bud-see"><span>The board sees the budget in the app</span></label></li>
+      <li><label><input type="checkbox" data-id="bud-request"><span>Request funding, and the approver gets notified and approves or declines</span></label></li>
+      <li><label><input type="checkbox" data-id="bud-receipts"><span>Submit purchase receipts (a photo or PDF)</span></label></li>
+      <li><label><input type="checkbox" data-id="fix-demo"><span>Smaller fix: remove the database columns left over from the unused demo chapter</span></label></li>
+      <li><label><input type="checkbox" data-id="fix-gcal"><span>Smaller fix: check that “Add to Google Calendar” works on phones</span></label></li>
+      <li><label><input type="checkbox" data-id="fix-sandbox"><span>Smaller fix: turn on Claude Code's sandbox, so agents can't open <code>.env</code> through shell commands either</span></label></li>
+      <li><label><input type="checkbox" data-id="brk-active"><span>Keep Supabase active over the break<small>Free projects pause after a week without activity.</small></span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-11-29" data-end="2026-11-30">
+    <div class="day-head">
+      <span class="date">Sun–Mon Nov 29–30</span>
+      <span class="count"></span>
+    </div>
+    <h2>Test with brothers, then fix</h2>
+    <p class="meta">So far only one brother (on the board, on an iPhone) has tried the app. Watch, don't help.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="tst-volunteers"><span>Ask the 13 survey volunteers to do the full member path on their own phones, both iPhone and Android<small>Sign in, add to home screen, turn on notifications, get a post, then look at Points.</small></span></label></li>
+      <li><label><input type="checkbox" data-id="tst-notes"><span>Write down where each person stopped, guessed, or asked for help</span></label></li>
+      <li><label><input type="checkbox" data-id="tst-numbers"><span>Record the counts: tried it, installed it, turned on notifications, received a post</span></label></li>
+      <li><label><input type="checkbox" data-id="tst-fix"><span>Fix the top 2–3 places people got stuck</span></label></li>
+      <li><label><input type="checkbox" data-id="tst-guest"><span>Have a classmate try guest mode cold, as a grader would: does the value come across?</span></label></li>
+    </ul>
+  </section>
+
+  <section class="day" data-group data-v2 data-date="2026-12-01">
+    <div class="day-head">
+      <span class="date">Tue Dec 1</span>
+      <span class="count"></span>
+    </div>
+    <h2>Project fair</h2>
+    <p class="meta">Security checks first, then the demo.</p>
+    <ul class="checks">
+      <li><label><input type="checkbox" data-id="fair-rls"><span>Row-level security is on for every new table (check-ins, points, polls, files, RSVPs, budget)</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-keys"><span>Keys are only in environment variables, with none in the repo or its git history</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-sec"><span>Run <code>/security-review</code> and fix what comes up</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-free"><span>Everything is still on free tiers, with usage alerts set</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-plan"><span>Update the v2 plan with what changed and why (features before testing, after the grader's feedback)</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-demo"><span>Fair demo: put a check-in code on your laptop and let visitors check in from their phones</span></label></li>
+      <li><label><input type="checkbox" data-id="fair-numbers"><span>Bring real numbers: installs, notifications on, check-ins, and what testers said</span></label></li>
+    </ul>
+  </section>
+
+  <details class="later">
+    <summary>After the course</summary>
+    <p>From the v2 plan's “What I'll change.” Not counted in the progress bar above.</p>
+
+    <section class="day" data-group data-date="2026-12-02" data-end="2027-06-30">
+      <div class="day-head">
+        <span class="date">December onward</span>
+        <span class="count"></span>
+      </div>
+      <h2>Members only, and the chapter's own accounts</h2>
+      <ul class="checks">
+        <li><label><input type="checkbox" data-id="aft-inperson"><span>Try check-in for real at the first meetings back, and fix what comes up</span></label></li>
+        <li><label><input type="checkbox" data-id="aft-guests"><span>Close the app to guests again: only members see posts, events, People, and Points, and get notifications<small>The sample people, sample points, and sample check-in go away with it.</small></span></label></li>
+        <li><label><input type="checkbox" data-id="aft-handoff"><span>Hand KTP Hub over to the chapter's KTP account: Supabase, Vercel, Clerk, and GitHub<small>Keep the same web address and notification keys, or every brother has to reinstall and turn notifications on again.</small></span></label></li>
+        <li><label><input type="checkbox" data-id="aft-winter"><span>When Winter starts, check that Points switches quarters and Autumn is still one tap back</span></label></li>
+      </ul>
+    </section>
+  </details>
+
+  <footer>
+    Checks are saved in this browser only.
+    <button type="button" id="reset">Reset checks</button>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var KEY = 'ktp-roadmap-v2';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { state = {}; }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  var now = new Date();
+  var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-id]'));
+  var groups = Array.prototype.slice.call(document.querySelectorAll('[data-group]'));
+
+  function update() {
+    var total = 0, done = 0;
+    groups.forEach(function (g) {
+      var bs = g.querySelectorAll('input[data-id]');
+      var d = 0;
+      for (var i = 0; i < bs.length; i++) if (bs[i].checked) d++;
+      var c = g.querySelector('.count');
+      var complete = d === bs.length;
+      var end = g.getAttribute('data-end') || g.getAttribute('data-date');
+      c.textContent = d + ' / ' + bs.length;
+      c.classList.toggle('complete', complete);
+      c.classList.toggle('behind', !complete && end < today);
+      if (g.hasAttribute('data-v2')) { total += bs.length; done += d; }
+    });
+    var pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('done').innerHTML = '<strong>' + done + '</strong> of ' + total + ' v2 steps done';
+    document.getElementById('fill').style.width = pct + '%';
+    document.querySelector('.bar').setAttribute('aria-valuenow', pct);
+  }
+
+  // Steps finished before this page existed start checked; your own checks win after that.
+  boxes.forEach(function (b) {
+    var id = b.getAttribute('data-id');
+    if (Object.prototype.hasOwnProperty.call(state, id)) b.checked = !!state[id];
+    b.addEventListener('change', function () {
+      state[id] = b.checked ? 1 : 0;
+      save();
+      update();
+    });
+  });
+
+  // Mark today's section.
+  groups.forEach(function (g) {
+    var start = g.getAttribute('data-date');
+    var end = g.getAttribute('data-end') || start;
+    if (start <= today && today <= end) {
+      var pill = document.createElement('span');
+      pill.className = 'now';
+      pill.textContent = g.hasAttribute('data-end') ? 'Now' : 'Today';
+      g.querySelector('.date').appendChild(pill);
+      if (g.closest('details')) g.closest('details').open = true;
+    }
+  });
+
+  // Days until the project fair (Tue Dec 1).
+  var fair = new Date(2026, 11, 1);
+  var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var days = Math.round((fair - midnight) / 864e5);
+  var dueEl = document.getElementById('due');
+  if (days > 1) dueEl.textContent = days + ' days until the fair (Tue Dec 1)';
+  else if (days === 1) dueEl.textContent = 'The fair is tomorrow (Tue Dec 1)';
+  else if (days === 0) dueEl.textContent = 'The fair is today';
+  else dueEl.textContent = 'The fair was Tue Dec 1';
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (!confirm('Put every check back the way the page started?')) return;
+    state = {};
+    save();
+    boxes.forEach(function (b) { b.checked = b.defaultChecked; });
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

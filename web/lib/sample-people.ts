@@ -3,8 +3,9 @@ import type { Profile } from "./people";
 // Made-up brothers for guests (like graders), so they see the same People page
 // and profiles as members without seeing real members' details. For the
 // course only: after it, guests won't get People at all.
-const sample = (p: Omit<Profile, "email" | "imageUrl" | "linkedin">): Profile => ({
+const sample = (p: Omit<Profile, "email" | "imageUrl" | "linkedin" | "isLead">): Profile => ({
   ...p,
+  isLead: false,
   email: `${p.name.split(" ")[0].toLowerCase()}@example.com`,
   imageUrl: null,
   linkedin: null,

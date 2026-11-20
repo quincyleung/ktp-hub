@@ -20,6 +20,7 @@ export type Profile = Person & {
   linkedin: string | null;
   interests: string[];
   about: string | null;
+  isLead: boolean; // a committee lead: can run check-ins for committee meetings
 };
 
 type Row = Record<string, unknown>;
@@ -70,6 +71,7 @@ export async function getProfile(id: string): Promise<Profile | null> {
     linkedin: text(data.linkedin),
     interests: Array.isArray(data.interests) ? (data.interests as string[]) : [],
     about: text(data.about),
+    isLead: data.role === "lead",
   };
 }
 

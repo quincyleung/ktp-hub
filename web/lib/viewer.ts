@@ -4,13 +4,15 @@ import { profileIsComplete } from "./profile-fields";
 import { memberType, type MemberType } from "./roles";
 import { db } from "./supabase";
 
-export type Role = "board" | "member" | "guest";
+// board: posts, runs check-ins, manages points. lead: a committee lead, who
+// can run check-ins for their committee. member: everyone else on the roster.
+export type Role = "board" | "lead" | "member" | "guest";
 
 export type Viewer = {
   userId: string;
   email: string;
   name: string;
-  role: Role; // permissions: board can post
+  role: Role; // permissions: board can post and manage points; board and leads run check-ins
   type: MemberType; // the badge: Board, Brother, Pledge, Alum, or Guest
   memberId: string | null; // their row on the roster (null for guests)
   needsProfile: boolean; // a member without a graduation year or major yet: Home sends them to /welcome
@@ -79,10 +81,13 @@ export async function getViewer(): Promise<Viewer | null> {
     userId: user.id,
     email,
     name: row.name,
-    role: row.role === "board" ? "board" : "member",
+    role: row.role === "board" ? "board" : row.role === "lead" ? "lead" : "member",
     type: memberType(row.role, row.status),
     memberId: row.id,
     // Without the profile columns (an old database), don't trap anyone in onboarding.
     needsProfile: hasPhotoColumn && !profileIsComplete({ year: row.year ?? null, major: row.major ?? null }),
   };
 }
+
+/** Board members and committee leads can start check-ins. */
+export const canRunCheckins = (v: Viewer) => v.role === "board" || v.role === "lead";

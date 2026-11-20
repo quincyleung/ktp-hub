@@ -17,3 +17,6 @@ export function mapsUrl(location: string) {
   const query = /chicago/i.test(location) ? location : `${location}, University of Chicago`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
+
+/** The app's address. Check-in QR codes link here, so a phone's camera app opens it too. */
+export const APP_URL = "https://uchicago-ktphub.vercel.app";

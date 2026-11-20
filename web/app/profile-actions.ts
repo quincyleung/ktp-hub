@@ -116,3 +116,25 @@ export async function updateProfile(form: FormData): Promise<ProfileResult> {
 export async function saveBasics(form: FormData): Promise<ProfileResult> {
   return save(form, readBasics, "saveBasics");
 }
+
+// Board only: makes a brother a committee lead (they can run check-ins for
+// committee meetings) or takes it away. Board members' own role isn't touched.
+export async function setCommitteeLead(memberId: string, lead: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
+  const viewer = await getViewer();
+  if (!viewer || viewer.role !== "board") return { ok: false, error: "Only the board can choose committee leads." };
+  if (typeof memberId !== "string" || !/^[0-9a-f-]{36}$/i.test(memberId) || typeof lead !== "boolean") {
+    return { ok: false, error: "That didn't look right." };
+  }
+  const { data, error } = await db()
+    .from("members")
+    .update({ role: lead ? "lead" : "member" })
+    .eq("id", memberId)
+    .in("role", ["member", "lead"])
+    .select("id");
+  if (error || !data?.length) {
+    if (error) console.error("setCommitteeLead failed:", error.message);
+    return { ok: false, error: error ? "That couldn't be saved. Try again." : "Board members can already run check-ins." };
+  }
+  refresh();
+  return { ok: true };
+}

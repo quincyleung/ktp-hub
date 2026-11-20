@@ -6,6 +6,7 @@ import { BADGE } from "@/lib/roles";
 import { getViewer } from "@/lib/viewer";
 import Avatar from "../../../avatar";
 import BackButton from "../../../back-button";
+import LeadToggle from "../../../lead-toggle";
 import { LinkedInIcon } from "../../../icons";
 import { primaryButton, secondaryButton } from "../../../ui";
 import { PageSuspense } from "../../../spinner";
@@ -58,14 +59,22 @@ async function ProfileView({ params }: Pick<PageProps<"/people/[id]">, "params">
             </a>
           )}
         </div>
-        <p
-          className={`mt-2 rounded-full px-3 py-0.5 text-sm font-bold ${
-            p.type === "board" ? "bg-navy text-white" : "bg-accent/10 text-accent"
-          }`}
-        >
-          {p.type === "board" ? "E-Board" : BADGE[p.type]}
-        </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-2">
+          <p
+            className={`rounded-full px-3 py-0.5 text-sm font-bold ${
+              p.type === "board" ? "bg-navy text-white" : "bg-accent/10 text-accent"
+            }`}
+          >
+            {p.type === "board" ? "E-Board" : BADGE[p.type]}
+          </p>
+          {p.isLead && <p className="rounded-full bg-accent/10 px-3 py-0.5 text-sm font-bold text-accent">Committee lead</p>}
+        </div>
       </div>
+
+      {/* The board picks committee leads here. Board members already run check-ins. */}
+      {viewer.role === "board" && p.type !== "board" && p.type !== "alumni" && (
+        <LeadToggle memberId={p.id} name={p.name.split(" ")[0]} isLead={p.isLead} />
+      )}
 
       {details.length > 0 && (
         <dl className="mt-6 divide-y divide-line rounded-2xl bg-surface">

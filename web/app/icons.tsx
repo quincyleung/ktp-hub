@@ -128,3 +128,29 @@ export const SettingsIcon = (p: IconProps) => (
     <circle cx="12" cy="12" r="3" />
   </Icon>
 );
+
+// A QR code in a viewfinder: the Check in button.
+export const ScanIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
+    <rect x="7" y="7" width="4" height="4" rx="0.5" />
+    <rect x="13" y="7" width="4" height="4" rx="0.5" />
+    <rect x="7" y="13" width="4" height="4" rx="0.5" />
+    <path d="M13 13h1.5M17 13v1.5M13 17h4v-1" />
+  </Icon>
+);
+
+// Trophy, from Lucide (ISC license).
+export const TrophyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </Icon>
+);
+
+export const CheckIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 6 9 17l-5-5" />
+  </Icon>
+);
