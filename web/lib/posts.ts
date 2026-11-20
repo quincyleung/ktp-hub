@@ -39,6 +39,7 @@ export function postToItem(p: Post): CalendarItem {
     postId: p.id,
     title: p.title,
     start: start.toISOString(),
+    end: null,
     day: dayKey(start),
     allDay: false,
     location: p.location,

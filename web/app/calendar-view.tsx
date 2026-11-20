@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CalendarItem } from "@/lib/calendar-feed";
+import { notOver, type CalendarItem } from "@/lib/calendar-feed";
 import { dayKey, longDay } from "@/lib/time";
 import EventCard from "./event-card";
 import { ChevronLeft, ChevronRight } from "./icons";
@@ -24,8 +24,12 @@ function weekOf(day: string): string[] {
   return Array.from({ length: 7 }, (_, i) => new Date(sunday + i * DAY_MS).toISOString().slice(0, 10));
 }
 
-// A month grid with a dot on days that have events. Below it: this week's
-// events, or just one day once it's tapped (or opened from a reminder).
+/** "Nov 29" for a YYYY-MM-DD day. */
+const shortDay = (day: string) => `${MONTHS[Number(day.slice(5, 7)) - 1].slice(0, 3)} ${Number(day.slice(8))}`;
+
+// A month grid with a dot on days that have events. Below it: what's still
+// coming up in the week of the next event (past events are left out), or just
+// one day once it's tapped (or opened from a reminder).
 export default function CalendarView({
   items,
   nowIso,
@@ -37,31 +41,42 @@ export default function CalendarView({
 }) {
   const now = useMemo(() => new Date(nowIso), [nowIso]);
   const today = dayKey(now);
-  const [ty, tm] = today.split("-").map(Number);
 
-  const [iy, im] = (initialDay ?? today).split("-").map(Number);
+  // The calendar opens on the week of the next event that isn't over yet.
+  const upcoming = useMemo(() => items.filter((item) => notOver(item, now)), [items, now]);
+  const focusDay = upcoming[0]?.day ?? today;
+  const week = useMemo(() => weekOf(focusDay), [focusDay]);
+  const [fy, fm] = focusDay.split("-").map(Number);
+
+  const [iy, im] = (initialDay ?? focusDay).split("-").map(Number);
   const [month, setMonth] = useState({ y: iy, m: im - 1 });
   const [selected, setSelected] = useState<string | null>(initialDay);
 
-  const byDay = useMemo(() => {
-    const map = new Map<string, CalendarItem[]>();
-    for (const item of items) {
-      const list = map.get(item.day) ?? [];
-      list.push(item);
-      map.set(item.day, list);
-    }
-    return map;
-  }, [items]);
+  const byDay = useMemo(() => groupByDay(items), [items]);
+  const upcomingByDay = useMemo(() => groupByDay(upcoming), [upcoming]);
 
   const firstWeekday = new Date(Date.UTC(month.y, month.m, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(month.y, month.m + 1, 0)).getUTCDate();
   const prefix = `${month.y}-${pad(month.m + 1)}-`;
-  const isThisMonth = month.y === ty && month.m === tm - 1;
+  const isFocusMonth = month.y === fy && month.m === fm - 1;
 
-  const week = useMemo(() => weekOf(today), [today]);
-  // "week": this week's events. "day": one tapped day. "pick": another month, nothing tapped yet.
-  const mode = selected ? "day" : isThisMonth ? "week" : "pick";
-  const listDays = mode === "day" ? [selected!] : mode === "week" ? week.filter((d) => byDay.has(d)) : [];
+  // "week": what's coming up in the next event's week. "day": one tapped day.
+  // "pick": another month, nothing tapped yet.
+  const mode = selected ? "day" : week.some((d) => d.startsWith(prefix)) ? "week" : "pick";
+  const listDays = mode === "day" ? [selected!] : mode === "week" ? week.filter((d) => upcomingByDay.has(d)) : [];
+  const weekTitle =
+    upcoming.length === 0
+      ? "Coming up"
+      : week.includes(today)
+        ? "This week"
+        : week[0] === weekOf(new Date(Date.parse(today) + 7 * DAY_MS).toISOString().slice(0, 10))[0]
+          ? "Next week"
+          : `Week of ${shortDay(week[0])}`;
+
+  function goToUpcoming() {
+    setSelected(null);
+    setMonth({ y: fy, m: fm - 1 });
+  }
 
   function go(delta: number) {
     setSelected(null);
@@ -87,16 +102,13 @@ export default function CalendarView({
             <h2 className="text-lg font-bold tracking-tight" aria-live="polite">
               {MONTHS[month.m]} {month.y}
             </h2>
-            {!isThisMonth && (
+            {!isFocusMonth && (
               <button
                 type="button"
-                onClick={() => {
-                  setSelected(null);
-                  setMonth({ y: ty, m: tm - 1 });
-                }}
+                onClick={goToUpcoming}
                 className="rounded-full bg-background px-3 py-0.5 text-sm font-semibold text-accent"
               >
-                Today
+                Upcoming
               </button>
             )}
           </div>
@@ -161,24 +173,17 @@ export default function CalendarView({
           <>
             <div className="flex items-baseline justify-between gap-3">
               <h2 className={sectionTitle}>
-                {mode === "week" ? "This week" : selected === today ? `Today · ${longDay(today)}` : longDay(selected!)}
+                {mode === "week" ? weekTitle : selected === today ? `Today · ${longDay(today)}` : longDay(selected!)}
               </h2>
               {mode === "day" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelected(null);
-                    setMonth({ y: ty, m: tm - 1 });
-                  }}
-                  className="shrink-0 text-[15px] font-semibold text-accent"
-                >
-                  This week
+                <button type="button" onClick={goToUpcoming} className="shrink-0 text-[15px] font-semibold text-accent">
+                  Upcoming
                 </button>
               )}
             </div>
             {listDays.length === 0 ? (
               <p className="mt-2 text-muted">
-                {mode === "week" ? "Nothing on the calendar this week." : "Nothing on this day."}
+                {mode === "week" ? "Nothing coming up on the calendar." : "Nothing on this day."}
               </p>
             ) : (
               <div key={mode === "day" ? selected : "week"} className="mt-3 animate-fade-in space-y-5 motion-reduce:animate-none">
@@ -192,7 +197,7 @@ export default function CalendarView({
                       </h3>
                     )}
                     <ul className="space-y-2">
-                      {(byDay.get(day) ?? []).map((item) => (
+                      {((mode === "week" ? upcomingByDay : byDay).get(day) ?? []).map((item) => (
                         <li key={item.key}>
                           <EventCard item={item} now={now} showDate={false} />
                         </li>
@@ -207,4 +212,14 @@ export default function CalendarView({
       </div>
     </div>
   );
+}
+
+function groupByDay(items: CalendarItem[]) {
+  const map = new Map<string, CalendarItem[]>();
+  for (const item of items) {
+    const list = map.get(item.day) ?? [];
+    list.push(item);
+    map.set(item.day, list);
+  }
+  return map;
 }

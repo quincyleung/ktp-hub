@@ -8,6 +8,7 @@ export type CalendarItem = {
   postId?: string; // board posts open their own page
   title: string;
   start: string; // ISO time
+  end: string | null; // ISO time; null when unknown (board posts)
   day: string; // YYYY-MM-DD in Chicago time
   allDay: boolean;
   location: string | null;
@@ -74,6 +75,7 @@ export function parseCalendarFeed(text: string, now: Date, daysBack = 120, daysA
       source: "google",
       title: event.summary?.trim() || "KTP event",
       start: startDate.toISOString(),
+      end: end.toJSDate().toISOString(),
       // All-day events have no time zone; their date is the day.
       day: allDay ? start.toString().slice(0, 10) : dayKey(startDate),
       allDay,
@@ -97,6 +99,16 @@ export function parseCalendarFeed(text: string, now: Date, daysBack = 120, daysA
   }
 
   return items.sort((a, b) => a.start.localeCompare(b.start));
+}
+
+// Events without an end time count as going on for 3 hours, like on Home.
+const DEFAULT_LENGTH_MS = 3 * 60 * 60 * 1000;
+
+/** True until the event is over. All-day events count for their whole day. */
+export function notOver(item: CalendarItem, now: Date): boolean {
+  if (item.allDay) return item.day >= dayKey(now);
+  const end = item.end ? Date.parse(item.end) : Date.parse(item.start) + DEFAULT_LENGTH_MS;
+  return end > now.getTime();
 }
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
